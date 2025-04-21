@@ -6,8 +6,8 @@
   import { computeRefi, type RefiInputs } from "./lib/formulas";
   import { readState, writeState } from "./lib/urlSync";
   import { onMount } from "svelte";
-  import ChartSection from './components/ChartSection.svelte';
-  
+  import ChartSection from "./components/ChartSection.svelte";
+
   /* --- reactive calculator state --- */
   let form: Inputs = {
     purchasePrice: 300000,
@@ -54,7 +54,7 @@
       amortYears,
       monthlyRent,
       vacancyRate,
-      monthlyOpEx
+      monthlyOpEx,
     } = form;
 
     const {
@@ -62,18 +62,17 @@
       newLoanAmount,
       newRate,
       newTermYears,
-      closingCosts: refiClosingCosts
+      closingCosts: refiClosingCosts,
     } = refi;
 
-    console.log(
-      '🔍 fields changed →',
-      { purchasePrice,
-        downPercent,
-        interestRate,
-        monthlyRent,
-        refiEnabled: enabled,
-        newRate }
-    );
+    console.log("🔍 fields changed →", {
+      purchasePrice,
+      downPercent,
+      interestRate,
+      monthlyRent,
+      refiEnabled: enabled,
+      newRate,
+    });
 
     // Now every time *any* of the above changes, this block re‑fires:
     clearTimeout(urlTimer);
@@ -92,7 +91,7 @@
         newLoanAmount,
         newRate,
         newTermYears,
-        refiClosingCosts
+        refiClosingCosts,
       };
       writeState(state);
     }, 400);
@@ -110,9 +109,9 @@
   <h1 class="text-3xl font-bold">Cash‑on‑Cash Return Calculator</h1>
   <!-- QoL controls -->
   <div class="text-sm text-gray-500 space-x-4">
-    <a href="." class="underline">Reset all inputs</a>
+    <a href=".">Reset all inputs</a>
     <button
-      class="underline"
+      class="text-primary hover:underline"
       on:click={() => navigator.clipboard.writeText(location.href)}
     >
       Copy shareable link
@@ -126,6 +125,9 @@
 
   <!-- Pass both result objects down -->
   <ResultsSection {results} {refiResults} />
-  <h2 class="text-2xl font-semibold pt-8">10‑Year Projection</h2>
-  <ChartSection bind:form={form} projectYears={10} />
+  <h2 class="text-2xl font-semibold pt-8">Projection</h2>
+  <ChartSection
+  bind:form={form}
+  initialYears={form.amortYears}     
+/>
 </main>

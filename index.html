@@ -1,13 +1,70 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + Svelte + TS</title>
+
+    <!-- Primary Meta Tags -->
+    <title>Cash‑on‑Cash Return & Refinance Calculator</title>
+    <meta
+      name="description"
+      content="Free online tool to calculate your rental property’s cash‑on‑cash return and refinance break‑even point, complete with charts and shareable links."
+    />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://YOUR_DOMAIN/" />
+    <meta
+      property="og:title"
+      content="Cash‑on‑Cash Return & Refinance Calculator"
+    />
+    <meta
+      property="og:description"
+      content="Calculate your rental ROI and refinance break‑even quickly and easily."
+    />
+    <meta property="og:image" content="https://YOUR_DOMAIN/og-image.png" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://YOUR_DOMAIN/" />
+    <meta
+      name="twitter:title"
+      content="Cash‑on‑Cash Return & Refinance Calculator"
+    />
+    <meta
+      name="twitter:description"
+      content="Calculate your rental ROI and refinance break‑even quickly and easily."
+    />
+    <meta name="twitter:image" content="https://YOUR_DOMAIN/og-image.png" />
   </head>
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is cash‑on‑cash return?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Cash‑on‑cash return is the annual pre‑tax cash flow divided by the total cash invested, expressed as a percentage."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How do you calculate refinance break‑even?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Refinance break‑even is calculated by dividing the refinance closing costs by the monthly savings (old payment minus new payment)."
+            }
+          }
+        ]
+      }
+      </script>
+      
   </body>
 </html>

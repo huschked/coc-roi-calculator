@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { RefiInputs } from "../lib/formulas";
+    import Field from "./Field.svelte";
     export let refi: RefiInputs;
 
     /* hold percent as string for the input, convert only on blur */
@@ -14,60 +15,69 @@
     </summary>
 
     <div class="grid gap-6 md:grid-cols-2 mt-4">
-        <label class="block">
-            <span class="label">New loan amount ($)</span>
+        <Field label="New Loan Amount" prefix="$" id="newLoanAmount">
             <input
-                class="input"
+                class="input with-prefix"
+                id="newLoanAmount"
                 type="number"
                 min="0"
                 step="1000"
                 bind:value={refi.newLoanAmount}
             />
-        </label>
+        </Field>
 
-        <label class="block">
-            <span class="label">New interest rate (%)</span>
+        <!-- New interest rate -->
+        <Field label="New Rate" suffix="%" id="newRate">
             <input
                 class="input with-suffix"
+                id="newRate"
                 type="number"
                 min="0"
                 step="0.001"
                 bind:value={newRatePct}
                 on:blur={syncRate}
             />
-        </label>
+        </Field>
 
-        <label class="block">
-            <span class="label">New term (years)</span>
+        <!-- New term (years) -->
+        <Field label="New Term (Years)" id="newTermYears">
             <input
                 class="input"
+                id="newTermYears"
                 type="number"
                 min="1"
                 max="40"
                 step="1"
                 bind:value={refi.newTermYears}
             />
-        </label>
+        </Field>
 
-        <label class="block">
-            <span class="label">Refi closing costs ($)</span>
+        <!-- Refi closing costs -->
+        <Field label="Refi Closing Costs ($)" prefix="$" id="refiClosingCosts">
             <input
-                class="input"
+                class="input with-prefix"
+                id="refiClosingCosts"
                 type="number"
                 min="0"
                 step="100"
                 bind:value={refi.closingCosts}
             />
-        </label>
+        </Field>
     </div>
 </details>
 
-<style>
+<style lang="postcss">
     .label {
         @apply block mb-1 text-sm font-medium text-gray-700;
     }
     .input {
         @apply w-full rounded-md border border-gray-300 py-2 px-3
-                     focus:border-primary focus:ring-primary;
+             focus:border-primary focus:ring-primary;
+    }
+    .with-prefix {
+        padding-left: 2.5rem;
+    } /* 44 px */
+    .with-suffix {
+        padding-right: 2.5rem;
     }
 </style>

@@ -85,7 +85,7 @@ export function compute(inputs: Inputs) {
     const monthlyNOI =
         inputs.monthlyRent * (1 - inputs.vacancyRate) - inputs.monthlyOpEx;
 
-        const monthlyCashFlow = monthlyNOI - monthlyPmt;
+    const monthlyCashFlow = monthlyNOI - monthlyPmt;
     /* ---- Key returns ---- */
     const annualCashFlow = (monthlyCashFlow) * 12;
     const cashOnCash = annualCashFlow / cashInvested;
@@ -101,36 +101,36 @@ export function compute(inputs: Inputs) {
 export function amortizationSchedule(
     inputs: Inputs,
     years = 10
-  ): { year: number; balance: number; cashFlow: number }[] {
+): { year: number; balance: number; cashFlow: number }[] {
     // Present value = loan amount
     const pv = inputs.purchasePrice * (1 - inputs.downPercent);
     const monthlyRate = inputs.interestRate / 12;
     const totalMonths = inputs.amortYears * 12;
-  
+
     // Payment amount (positive)
     const pmtAmt = Math.abs(pmt(monthlyRate, totalMonths, pv));
-  
+
     // Monthly net operating income
     const monthlyNOI =
-      inputs.monthlyRent * (1 - inputs.vacancyRate) - inputs.monthlyOpEx;
+        inputs.monthlyRent * (1 - inputs.vacancyRate) - inputs.monthlyOpEx;
     // Annual cash flow is constant
     const annualCashFlow = (monthlyNOI - pmtAmt) * 12;
-  
+
     const schedule: { year: number; balance: number; cashFlow: number }[] = [];
-  
+
     for (let y = 0; y <= years; y++) {
-      const m = Math.min(y * 12, totalMonths);
-  
-      // Outstanding balance formula for amortising loan
-      const balance =
-        m >= totalMonths
-          ? 0
-          : pv * Math.pow(1 + monthlyRate, m) -
-            (pmtAmt / monthlyRate) * (Math.pow(1 + monthlyRate, m) - 1);
-  
-      schedule.push({ year: y, balance, cashFlow: annualCashFlow });
+        const m = Math.min(y * 12, totalMonths);
+
+        // Outstanding balance formula for amortising loan
+        const balance =
+            m >= totalMonths
+                ? 0
+                : pv * Math.pow(1 + monthlyRate, m) -
+                (pmtAmt / monthlyRate) * (Math.pow(1 + monthlyRate, m) - 1);
+
+        schedule.push({ year: y, balance, cashFlow: annualCashFlow });
     }
-  
+
     return schedule;
-  }
-  
+}
+

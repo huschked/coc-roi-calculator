@@ -23,9 +23,10 @@
 <!-- 2‑column grid on md+, stacked on mobile -->
 <div class="grid gap-6 md:grid-cols-2">
     <!-- {/** ---------- Purchase & Rehab ---------- **/} -->
-    <Field label="Purchase price" prefix="$">
+    <Field label="Purchase Price" id="purchasePrice" prefix="$">
         <input
             class="input with-prefix"
+            id="purchasePrice"
             type="number"
             min="0"
             step="1000"
@@ -33,18 +34,20 @@
         />
     </Field>
 
-    <Field label="Down‑payment" suffix="%">
+    <Field label="Down‑Payment" id="downPayment" suffix="%">
         <input
           class="input with-suffix"
+          id="downPayment"
           type="number" min="0" max="100" step="0.1"
           bind:value={downPct}
           on:blur={syncDown}
         />
       </Field>
 
-    <Field label="Closing costs" prefix="$">
+    <Field label="Closing Costs" id="closingCosts" prefix="$">
         <input
             class="input with-prefix"
+            id="closingCosts"
             type="number"
             min="0"
             step="100"
@@ -52,9 +55,10 @@
         />
     </Field>
 
-    <Field label="Rehab budget" prefix="$">
+    <Field label="Rehab Budget" prefix="$" id="rehabBudget">
         <input
             class="input with-prefix"
+            id="rehabBudget"
             type="number"
             min="0"
             step="500"
@@ -63,9 +67,10 @@
     </Field>
 
     <!-- {/** ---------- Financing ---------- **/} -->
-    <Field label="Interest rate" suffix="%">
+    <Field label="Interest Rate" suffix="%" id="interestRate">
         <input
             class="input with-suffix"
+            id="interestRate"
             type="number"
             min="0"
             step="0.001"
@@ -74,9 +79,10 @@
         />
     </Field>
 
-    <Field label="Amortisation (years)">
+    <Field label="Amortisation (Years)" id="amortYears">
         <input
             class="input"
+            id="amortYears"
             type="number"
             min="1"
             max="40"
@@ -86,9 +92,10 @@
     </Field>
 
     <!-- {/** ---------- Income & Expenses ---------- **/} -->
-    <Field label="Monthly rent" prefix="$">
+    <Field label="Monthly Rent" prefix="$" id="monthlyRent">
         <input
             class="input with-prefix"
+            id="monthlyRent"
             type="number"
             min="0"
             step="50"
@@ -97,9 +104,10 @@
     </Field>
 
     <!-- Vacancy -->
-    <Field label="Vacancy rate" suffix="%">
+    <Field label="Vacancy Rate" suffix="%" id="vacancyRate">
         <input
             class="input with-suffix"
+            id="vacancyRate"
             type="number"
             min="0"
             max="100"
@@ -109,9 +117,10 @@
         />
     </Field>
 
-    <Field label="Monthly operating expenses" prefix="$">
+    <Field label="Monthly Operating Expenses" prefix="$" id="monthlyOpEx">
         <input
             class="input with-prefix"
+            id="monthlyOpEx"
             type="number"
             min="0"
             step="50"
@@ -120,7 +129,7 @@
     </Field>
 </div>
 
-<style>
+<style lang="postcss">
     /* Shared Tailwind utility bundle for all text inputs */
     .input {
         @apply w-full rounded-md border border-gray-300 py-2 px-3
@@ -128,10 +137,10 @@
     }
     /* Extra padding when adornments are present */
     .with-prefix {
-        padding-left: 2.75rem;
+        padding-left: 2.5rem;
     } /* 44 px */
     .with-suffix {
-        padding-right: 2.75rem;
+        padding-right: 2.5rem;
     } /* 44 px */
     /* Optional: mark negative numbers immediately */
     /* Stronger invalid highlight */
