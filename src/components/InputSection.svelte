@@ -8,7 +8,7 @@
     const setPercent = (e: Event, key: keyof Inputs) =>
         (form[key] = +(e.target as HTMLInputElement).value / 100);
     /* Local helpers to manage % inputs */
-    let interestPct = (form.interestRate * 100).toFixed(2);
+    let interestPct = (form.interestRate * 100).toFixed(3);
     let vacancyPct = (form.vacancyRate * 100).toFixed(1);
 
     /* When user finishes editing (on:blur), push the decimal value back */
@@ -67,7 +67,7 @@
             class="input with-suffix"
             type="number"
             min="0"
-            step="0.01"
+            step="0.001"
             bind:value={interestPct}
             on:blur={syncRate}
         />
