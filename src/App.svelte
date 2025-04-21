@@ -1,47 +1,33 @@
 <script lang="ts">
-  import svelteLogo from './assets/svelte.svg'
-  import viteLogo from '/vite.svg'
-  import Counter from './lib/Counter.svelte'
+  import InputSection   from './components/InputSection.svelte';
+  import ResultsSection from './components/ResultsSection.svelte';
+  import { compute, type Inputs }  from './lib/formulas';
+
+  /* --- reactive calculator state --- */
+  let form: Inputs = {
+    purchasePrice: 300000,
+    downPercent:   0.05,
+    closingCosts:  8000,
+    rehabCosts:    10000,
+    interestRate:  0.06625,
+    amortYears:    30,
+    monthlyRent:   2000,
+    vacancyRate:   0.05,
+    monthlyOpEx:   500,
+  };
+
+  /* Runs every time any `form` field changes */
+  $: results = compute(form);
 </script>
 
-<main>
-  <div>
-    <a href="https://vite.dev" target="_blank" rel="noreferrer">
-      <img src={viteLogo} class="logo" alt="Vite Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank" rel="noreferrer">
-      <img src={svelteLogo} class="logo svelte" alt="Svelte Logo" />
-    </a>
-  </div>
-  <h1>Vite + Svelte</h1>
+<main class="max-w-4xl mx-auto p-6 space-y-10">
+  <h1 class="text-3xl font-bold text-gray-800">
+    Cash‑on‑Cash Return Calculator
+  </h1>
 
-  <div class="card">
-    <Counter />
-  </div>
+  <!-- EXPLICIT two‑way bind (component variant) -->
+  <InputSection bind:form={form} />
 
-  <p>
-    Check out <a href="https://github.com/sveltejs/kit#readme" target="_blank" rel="noreferrer">SvelteKit</a>, the official Svelte app framework powered by Vite!
-  </p>
-
-  <p class="read-the-docs">
-    Click on the Vite and Svelte logos to learn more
-  </p>
+  <!-- Prop shorthand is fine here because `results` exists in script -->
+  <ResultsSection {results} />
 </main>
-
-<style>
-  .logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-  }
-  .logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-  }
-  .logo.svelte:hover {
-    filter: drop-shadow(0 0 2em #ff3e00aa);
-  }
-  .read-the-docs {
-    color: #888;
-  }
-</style>
