@@ -11,6 +11,10 @@
     let interestPct = (form.interestRate * 100).toFixed(3);
     let vacancyPct = (form.vacancyRate * 100).toFixed(1);
 
+    // → DOWN‑PAYMENT: keep a % string so form.downPercent stays 0.00x
+    let downPct = (form.downPercent * 100).toFixed(1);
+    const syncDown = () => (form.downPercent = +downPct / 100);
+
     /* When user finishes editing (on:blur), push the decimal value back */
     const syncRate = () => (form.interestRate = +interestPct / 100);
     const syncVac = () => (form.vacancyRate = +vacancyPct / 100);
@@ -31,15 +35,12 @@
 
     <Field label="Down‑payment" suffix="%">
         <input
-            class="input with-suffix"
-            type="number"
-            min="0"
-            max="100"
-            step="0.1"
-            value={form.downPercent * 100}
-            on:input={(e) => setPercent(e, "downPercent")}
+          class="input with-suffix"
+          type="number" min="0" max="100" step="0.1"
+          bind:value={downPct}
+          on:blur={syncDown}
         />
-    </Field>
+      </Field>
 
     <Field label="Closing costs" prefix="$">
         <input
