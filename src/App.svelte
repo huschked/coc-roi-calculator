@@ -7,7 +7,7 @@
   import { readState, writeState } from "./lib/urlSync";
   import { onMount } from "svelte";
   import ChartSection from "./components/ChartSection.svelte";
-  import { SpeedInsights } from "@vercel/speed-insights/next"
+  // import { SpeedInsights } from "@vercel/speed-insights/next"
 
   /* --- reactive calculator state --- */
   let form: Inputs = {
