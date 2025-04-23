@@ -6,6 +6,7 @@
   import { computeRefi, type RefiInputs } from "./lib/formulas";
   import { readState, writeState } from "./lib/urlSync";
   import { onMount } from "svelte";
+  import NewsletterModal from "./components/NewsletterModal.svelte";
   import ChartSection from "./components/ChartSection.svelte";
   // import { SpeedInsights } from "@vercel/speed-insights/next"
 
@@ -30,6 +31,21 @@
     newTermYears: 30,
     closingCosts: 5000,
   };
+
+  // Your Brevo embed script (from Forms → Embed)
+  const BREVO_URL = "https://sibforms.com/forms/XXXXXXXXX.js";
+
+  // Optionally: track if user already saw it in localStorage
+  let seen = false;
+  function handleClose() {
+    seen = true;
+    localStorage.setItem("subSeen", "1");
+  }
+
+  // On app load, check if they've seen it before
+  onMount(() => {
+    seen = Boolean(localStorage.getItem("subSeen"));
+  });
 
   // ----- hydrate from query once on mount -----
   onMount(() => {
@@ -127,8 +143,14 @@
   <!-- Pass both result objects down -->
   <ResultsSection {results} {refiResults} />
   <h2 class="text-2xl font-semibold pt-8">Projection</h2>
-  <ChartSection
-  bind:form={form}
-  initialYears={form.amortYears}     
-/>
+  <ChartSection bind:form initialYears={form.amortYears} />
+  
+  <!-- Popup modal: auto-open after 10s (10000ms), only once per session -->
+  {#if !seen}
+    <NewsletterModal
+      embedScriptUrl={BREVO_URL}
+      autoOpenAfter={10000}
+      on:close={handleClose}
+    />
+  {/if}
 </main>
