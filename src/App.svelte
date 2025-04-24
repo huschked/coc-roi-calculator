@@ -6,7 +6,6 @@
   import { computeRefi, type RefiInputs } from "./lib/formulas";
   import { readState, writeState } from "./lib/urlSync";
   import { onMount } from "svelte";
-  import NewsletterModal from "./components/NewsletterModal.svelte";
   import ChartSection from "./components/ChartSection.svelte";
   // import { SpeedInsights } from "@vercel/speed-insights/next"
 
@@ -146,11 +145,11 @@
   <ChartSection bind:form initialYears={form.amortYears} />
   
   <!-- Popup modal: auto-open after 10s (10000ms), only once per session -->
-  {#if !seen}
+  <!-- {#if !seen}
     <NewsletterModal
       embedScriptUrl={BREVO_URL}
       autoOpenAfter={10000}
       on:close={handleClose}
     />
-  {/if}
+  {/if} -->
 </main>
