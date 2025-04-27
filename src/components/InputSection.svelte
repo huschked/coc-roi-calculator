@@ -1,150 +1,213 @@
 <script lang="ts">
-    import Field from "./Field.svelte";
     import type { Inputs } from "../lib/formulas";
-
     export let form: Inputs;
-
-    /* Percent helper – converts entered % into decimal form */
-    const setPercent = (e: Event, key: keyof Inputs) =>
-        (form[key] = +(e.target as HTMLInputElement).value / 100);
-    /* Local helpers to manage % inputs */
-    let interestPct = (form.interestRate * 100).toFixed(3);
-    let vacancyPct = (form.vacancyRate * 100).toFixed(1);
-
-    // → DOWN‑PAYMENT: keep a % string so form.downPercent stays 0.00x
-    let downPct = (form.downPercent * 100).toFixed(1);
-    const syncDown = () => (form.downPercent = +downPct / 100);
-
-    /* When user finishes editing (on:blur), push the decimal value back */
-    const syncRate = () => (form.interestRate = +interestPct / 100);
-    const syncVac = () => (form.vacancyRate = +vacancyPct / 100);
 </script>
 
-<!-- 2‑column grid on md+, stacked on mobile -->
-<div class="grid gap-6 md:grid-cols-2">
-    <!-- {/** ---------- Purchase & Rehab ---------- **/} -->
-    <Field label="Purchase Price" id="purchasePrice" prefix="$">
+<div class="grid gap-6 md:grid-cols-2 mt-8">
+    <!-- Purchase Price -->
+    <label class="block">
+        <div class="flex items-center gap-1">
+            <span class="label">Purchase Price</span>
+            <div class="tooltip-container">
+                ❓
+                <div class="tooltip">
+                    Total price you are paying for the property.
+                </div>
+            </div>
+        </div>
         <input
             class="input with-prefix"
-            id="purchasePrice"
             type="number"
             min="0"
             step="1000"
             bind:value={form.purchasePrice}
         />
-    </Field>
+    </label>
 
-    <Field label="Down‑Payment" id="downPayment" suffix="%">
+    <!-- Down Payment -->
+    <label class="block">
+        <div class="flex items-center gap-1">
+            <span class="label">Down‑Payment</span>
+            <div class="tooltip-container">
+                ❓
+                <div class="tooltip">
+                    Percent of the price you are paying upfront.
+                </div>
+            </div>
+        </div>
         <input
-          class="input with-suffix"
-          id="downPayment"
-          type="number" min="0" max="100" step="0.1"
-          bind:value={downPct}
-          on:blur={syncDown}
+            class="input with-suffix"
+            type="number"
+            min="0"
+            max="100"
+            step="0.1"
+            bind:value={form.downPercent}
         />
-      </Field>
+    </label>
 
-    <Field label="Closing Costs" id="closingCosts" prefix="$">
+    <!-- Closing Costs -->
+    <label class="block">
+        <div class="flex items-center gap-1">
+            <span class="label">Closing Costs</span>
+            <div class="tooltip-container">
+                ❓
+                <div class="tooltip">
+                    Estimated additional costs at closing (taxes, fees).
+                </div>
+            </div>
+        </div>
         <input
             class="input with-prefix"
-            id="closingCosts"
             type="number"
             min="0"
             step="100"
             bind:value={form.closingCosts}
         />
-    </Field>
+    </label>
 
-    <Field label="Rehab Budget" prefix="$" id="rehabBudget">
+    <!-- Rehab Budget -->
+    <label class="block">
+        <div class="flex items-center gap-1">
+            <span class="label">Rehab Budget</span>
+            <div class="tooltip-container">
+                ❓
+                <div class="tooltip">
+                    Estimated renovation or repair costs after purchase.
+                </div>
+            </div>
+        </div>
         <input
             class="input with-prefix"
-            id="rehabBudget"
             type="number"
             min="0"
-            step="500"
+            step="100"
             bind:value={form.rehabCosts}
         />
-    </Field>
+    </label>
 
-    <!-- {/** ---------- Financing ---------- **/} -->
-    <Field label="Interest Rate" suffix="%" id="interestRate">
+    <!-- Interest Rate -->
+    <label class="block">
+        <div class="flex items-center gap-1">
+            <span class="label">Interest Rate</span>
+            <div class="tooltip-container">
+                ❓
+                <div class="tooltip">
+                    Annual interest rate for your mortgage loan.
+                </div>
+            </div>
+        </div>
         <input
             class="input with-suffix"
-            id="interestRate"
             type="number"
             min="0"
             step="0.001"
-            bind:value={interestPct}
-            on:blur={syncRate}
+            bind:value={form.interestRate}
         />
-    </Field>
+    </label>
 
-    <Field label="Amortisation (Years)" id="amortYears">
+    <!-- Amortisation Years -->
+    <label class="block">
+        <div class="flex items-center gap-1">
+            <span class="label">Amortisation (Years)</span>
+            <div class="tooltip-container">
+                ❓
+                <div class="tooltip">
+                    Length of the loan in years (typically 15–30 years).
+                </div>
+            </div>
+        </div>
         <input
             class="input"
-            id="amortYears"
             type="number"
             min="1"
             max="40"
             step="1"
             bind:value={form.amortYears}
         />
-    </Field>
+    </label>
 
-    <!-- {/** ---------- Income & Expenses ---------- **/} -->
-    <Field label="Monthly Rent" prefix="$" id="monthlyRent">
+    <!-- Monthly Rent -->
+    <label class="block">
+        <div class="flex items-center gap-1">
+            <span class="label">Monthly Rent</span>
+            <div class="tooltip-container">
+                ❓
+                <div class="tooltip">Expected monthly rental income.</div>
+            </div>
+        </div>
         <input
             class="input with-prefix"
-            id="monthlyRent"
             type="number"
             min="0"
-            step="50"
+            step="100"
             bind:value={form.monthlyRent}
         />
-    </Field>
+    </label>
 
-    <!-- Vacancy -->
-    <Field label="Vacancy Rate" suffix="%" id="vacancyRate">
+    <!-- Vacancy Rate -->
+    <label class="block">
+        <div class="flex items-center gap-1">
+            <span class="label">Vacancy Rate</span>
+            <div class="tooltip-container">
+                ❓
+                <div class="tooltip">
+                    Percentage of the year the property is expected to be
+                    vacant.
+                </div>
+            </div>
+        </div>
         <input
             class="input with-suffix"
-            id="vacancyRate"
             type="number"
             min="0"
             max="100"
             step="0.1"
-            bind:value={vacancyPct}
-            on:blur={syncVac}
+            bind:value={form.vacancyRate}
         />
-    </Field>
+    </label>
 
-    <Field label="Monthly Operating Expenses" prefix="$" id="monthlyOpEx">
+    <!-- Monthly OpEx -->
+    <label class="block md:col-span-2">
+        <div class="flex items-center gap-1">
+            <span class="label">Monthly Operating Expenses</span>
+            <div class="tooltip-container">
+                ❓
+                <div class="tooltip">
+                    Average monthly maintenance, management, and insurance
+                    costs.
+                </div>
+            </div>
+        </div>
         <input
             class="input with-prefix"
-            id="monthlyOpEx"
             type="number"
             min="0"
-            step="50"
+            step="100"
             bind:value={form.monthlyOpEx}
         />
-    </Field>
+    </label>
 </div>
 
 <style lang="postcss">
-    /* Shared Tailwind utility bundle for all text inputs */
-    .input {
-        @apply w-full rounded-md border border-gray-300 py-2 px-3
-             focus:border-primary focus:ring-primary;
+    .label {
+        @apply block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300;
     }
-    /* Extra padding when adornments are present */
-    .with-prefix {
-        padding-left: 2.5rem;
-    } /* 44 px */
-    .with-suffix {
-        padding-right: 2.5rem;
-    } /* 44 px */
-    /* Optional: mark negative numbers immediately */
-    /* Stronger invalid highlight */
-    :global(input:invalid) {
-        @apply border-red-500 ring-1 ring-red-500 focus:border-red-600 focus:ring-red-600;
+    .input {
+        @apply w-full rounded-md border border-gray-300 dark:border-gray-600 py-2 px-3
+           focus:border-primary focus:ring-primary;
+    }
+    .tooltip-container {
+        @apply relative text-xs text-gray-400 dark:text-gray-500 cursor-pointer;
+    }
+
+    .tooltip {
+        @apply absolute z-10 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 w-64 sm:w-48 mt-2 left-0 sm:left-1/2 transform sm:-translate-x-1/2;
+        top: 100%;
+        white-space: normal;
+        max-width: 16rem;
+    }
+
+    .tooltip-container:hover .tooltip {
+        display: block;
     }
 </style>

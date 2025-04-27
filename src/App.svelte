@@ -2,14 +2,14 @@
   import InputSection from "./components/InputSection.svelte";
   import ResultsSection from "./components/ResultsSection.svelte";
   import RefiSection from "./components/RefiSection.svelte";
+  import ChartSection from "./components/ChartSection.svelte";
+  import SavedScenarios from "./components/SavedScenarios.svelte";
+
   import { compute, type Inputs } from "./lib/formulas";
   import { computeRefi, type RefiInputs } from "./lib/formulas";
   import { readState, writeState } from "./lib/urlSync";
   import { onMount } from "svelte";
-  import ChartSection from "./components/ChartSection.svelte";
-  // import { SpeedInsights } from "@vercel/speed-insights/next"
 
-  /* --- reactive calculator state --- */
   let form: Inputs = {
     purchasePrice: 300000,
     downPercent: 0.05,
@@ -22,7 +22,6 @@
     monthlyOpEx: 500,
   };
 
-  /* ---- NEW: refinance inputs & defaults ---- */
   let refi: RefiInputs = {
     enabled: false,
     newLoanAmount: 250000,
@@ -31,36 +30,56 @@
     closingCosts: 5000,
   };
 
-  // Your Brevo embed script (from Forms → Embed)
-  const BREVO_URL = "https://sibforms.com/forms/XXXXXXXXX.js";
+  let savedScenarios: { name: string; inputs: any }[] = [];
 
-  // Optionally: track if user already saw it in localStorage
+  onMount(() => {
+    seen = Boolean(localStorage.getItem("subSeen"));
+    Object.assign(form, readState<Inputs>());
+    Object.assign(refi, readState<RefiInputs>());
+
+    const existing = localStorage.getItem("savedScenarios");
+    if (existing) {
+      savedScenarios = JSON.parse(existing);
+    }
+  });
+
+  function saveScenario() {
+    const name = prompt("Name this scenario:");
+    if (!name) return;
+
+    const newScenario = {
+      name,
+      inputs: { ...form },
+    };
+
+    savedScenarios = [...savedScenarios, newScenario];
+    localStorage.setItem("savedScenarios", JSON.stringify(savedScenarios));
+  }
+
+  function loadScenario(index: number) {
+    const scenario = savedScenarios[index];
+    if (scenario) {
+      form = { ...scenario.inputs };
+    }
+  }
+
+  function deleteScenario(index: number) {
+    savedScenarios = savedScenarios.filter((_, i) => i !== index);
+    localStorage.setItem("savedScenarios", JSON.stringify(savedScenarios));
+  }
+
+  const BREVO_URL = "https://sibforms.com/forms/XXXXXXXXX.js";
   let seen = false;
   function handleClose() {
     seen = true;
     localStorage.setItem("subSeen", "1");
   }
 
-  // On app load, check if they've seen it before
-  onMount(() => {
-    seen = Boolean(localStorage.getItem("subSeen"));
-  });
-
-  // ----- hydrate from query once on mount -----
-  onMount(() => {
-    Object.assign(form, readState<Inputs>());
-    Object.assign(refi, readState<RefiInputs>());
-  });
-
-  /* ---- reactive calculations ---- */
   $: results = compute(form);
   $: refiResults = computeRefi(results.monthlyPmt, refi);
 
-  // debounce so we don’t spam history.replaceState on every keystroke
   let urlTimer: ReturnType<typeof setTimeout>;
-  // this $: reruns automatically whenever `form` *or* `refi` changes
   $: {
-    // Destructure the nested fields so Svelte knows to re‑run this
     const {
       purchasePrice,
       downPercent,
@@ -81,16 +100,6 @@
       closingCosts: refiClosingCosts,
     } = refi;
 
-    console.log("🔍 fields changed →", {
-      purchasePrice,
-      downPercent,
-      interestRate,
-      monthlyRent,
-      refiEnabled: enabled,
-      newRate,
-    });
-
-    // Now every time *any* of the above changes, this block re‑fires:
     clearTimeout(urlTimer);
     urlTimer = setTimeout(() => {
       const state = {
@@ -121,35 +130,80 @@
   }
 </script>
 
-<main class="max-w-4xl mx-auto p-6 space-y-10">
-  <h1 class="text-3xl font-bold">Cash‑on‑Cash Return Calculator</h1>
-  <!-- QoL controls -->
-  <div class="text-sm text-gray-500 space-x-4">
-    <a href=".">Reset all inputs</a>
+<main class="max-w-4xl mx-auto pt-2 px-4 space-y-3">
+  <!-- 🎯 Insert New Logo Here -->
+  <section class="flex flex-col items-center text-center space-y-4">
+    <img
+      src="/page-title.png"
+      alt="RentROIcalc Logo"
+      class="w-[750px] max-w-xs mx-auto my-1"
+    />
+
+    <!-- Add separator line -->
+    <hr
+      class="border-t border-gray-300 dark:border-gray-700 w-full max-w-md mx-auto mt-4"
+    />
+  </section>
+
+  <!-- 🔥 Copy Link and Reset below Saved Scenarios -->
+  <div class="flex flex-wrap gap-4 justify-center mt-6">
     <button
-      class="text-primary hover:underline"
-      on:click={() => navigator.clipboard.writeText(location.href)}
+      on:click={() => (location.href = ".")}
+      class="bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600 text-sm transition"
     >
-      Copy shareable link
+      Reset All Inputs
     </button>
-    {#if copied}
-      <span class="text-green-600 ml-2">Copied!</span>
-    {/if}
+    <button
+      on:click={copyLink}
+      class="bg-primary text-white px-4 py-2 rounded hover:bg-primary-dark text-sm transition"
+    >
+      Copy Shareable Link
+    </button>
   </div>
+
+  {#if copied}
+    <div class="text-green-500 dark:text-green-400 text-center text-sm mt-2">
+      Copied to clipboard!
+    </div>
+  {/if}
+
+  <!-- Input Sections -->
   <InputSection bind:form />
   <RefiSection bind:refi />
 
-  <!-- Pass both result objects down -->
+  <!-- Results -->
   <ResultsSection {results} {refiResults} />
-  <h2 class="text-2xl font-semibold pt-8">Projection</h2>
+
+  <!-- Projection -->
+  <h2 class="text-2xl font-semibold pt-8 text-gray-900 dark:text-gray-100">
+    Projection
+  </h2>
   <ChartSection bind:form initialYears={form.amortYears} />
-  
-  <!-- Popup modal: auto-open after 10s (10000ms), only once per session -->
-  <!-- {#if !seen}
-    <NewsletterModal
-      embedScriptUrl={BREVO_URL}
-      autoOpenAfter={10000}
-      on:close={handleClose}
-    />
-  {/if} -->
+
+  <!-- Save Button at Bottom -->
+  <div class="flex justify-center mt-8">
+    <button
+      on:click={saveScenario}
+      class="bg-primary text-white rounded px-6 py-3 hover:bg-primary-dark transform hover:scale-105 hover:shadow-lg transition-all"
+    >
+      Save This Scenario
+    </button>
+  </div>
+
+  <hr
+    class="border-t border-gray-300 dark:border-gray-700 w-full max-w-md mx-auto mt-4"
+  />
+
+  <!-- Saved Scenarios List -->
+  <SavedScenarios
+    {savedScenarios}
+    {saveScenario}
+    {loadScenario}
+    {deleteScenario}
+  />
 </main>
+
+<footer class="text-center text-gray-400 text-sm py-6 mt-10 border-t border-gray-200 dark:border-gray-700">
+  © 2025 RentROIcalc. All rights reserved.
+</footer>
+
