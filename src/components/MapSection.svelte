@@ -10,6 +10,13 @@
   /** (Optional) popup text */
   export let label: string = "";
 
+  // point Leaflet at the images in /public/leaflet
+  L.Icon.Default.mergeOptions({
+    iconUrl:      '/leaflet/marker-icon.png',
+    iconRetinaUrl:'/leaflet/marker-icon-2x.png',
+    shadowUrl:    '/leaflet/marker-shadow.png'
+  });
+  
   let map: L.Map;
   let container: HTMLDivElement;
   let marker: L.Marker;

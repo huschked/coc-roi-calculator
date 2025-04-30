@@ -6,6 +6,8 @@
   ],
   "compilerOptions": {
     // existing options …
-    "verbatimModuleSyntax": true
+    "verbatimModuleSyntax": true,
+    "allowArbitraryExtensions": true
+
   }
 }
