@@ -41,7 +41,7 @@
     <!-- Purchase Price -->
     <label class="block">
         <div class="flex items-center gap-1">
-            <span class="label">Purchase Price</span>
+            <span class="label">Purchase Price ($)</span>
             <div class="tooltip-container">
                 ❓
                 <div class="tooltip">
@@ -83,7 +83,7 @@
     <!-- Closing Costs -->
     <label class="block">
         <div class="flex items-center gap-1">
-            <span class="label">Closing Costs</span>
+            <span class="label">Closing Costs ($)</span>
             <div class="tooltip-container">
                 ❓
                 <div class="tooltip">
@@ -103,7 +103,7 @@
     <!-- Rehab Budget -->
     <label class="block">
         <div class="flex items-center gap-1">
-            <span class="label">Rehab Budget</span>
+            <span class="label">Rehab Budget ($)</span>
             <div class="tooltip-container">
                 ❓
                 <div class="tooltip">
@@ -165,7 +165,7 @@
     <!-- Monthly Rent -->
     <label class="block">
         <div class="flex items-center gap-1">
-            <span class="label">Monthly Rent</span>
+            <span class="label">Monthly Rent ($)</span>
             <div class="tooltip-container">
                 ❓
                 <div class="tooltip">Expected monthly rental income.</div>
@@ -227,7 +227,7 @@
     <!-- Monthly OpEx -->
     <label class="block md:col-span-2">
         <div class="flex items-center gap-1">
-            <span class="label">Monthly Operating Expenses</span>
+            <span class="label">Monthly Operating Expenses ($)</span>
             <div class="tooltip-container">
                 ❓
                 <div class="tooltip">
