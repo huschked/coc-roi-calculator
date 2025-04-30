@@ -1,108 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-82HLEJGBR5"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
-    function gtag() { dataLayer.push(arguments); }
+    function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-
     gtag('config', 'G-82HLEJGBR5');
   </script>
 
-  <!-- at the top of <head> -->
-  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-  <!-- optional: iOS home-screen icon -->
+  <!-- Favicon, touch icon, canonical, leaflet CSS… -->
+  <link rel="icon" href="/favicon.ico" />
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon.png" />
   <link rel="canonical" href="https://rentroicalc.com/" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-sA+e2mtSjvC2Tc7hp+9j+OP+Bm4l5NQqgFtvuZ5u5hM=" crossorigin="" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-sA+e2mtSjvC2Tc7hp+9j+OP+Bm4l5NQqgFtvuZ5u5hM="
+    crossorigin=""
+  />
 
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-
-  <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
-      "url": "https://rentroicalc.com/",
-      "name": "Rental ROI Calculator",
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://rentroicalc.com/?query={query}",
-        "query-input": "required name=query"
-      }
-    }
-    </script>
-
+  <!-- Brevo SDK & init (with relative frameUrl) -->
   <script src="https://cdn.brevo.com/js/sdk-loader.js" async></script>
   <script>
-    // Version: 2.0
     window.Brevo = window.Brevo || [];
     Brevo.push([
       "init",
       {
-        client_key: "5w21v5zr0oaehqjh47w40itl"
+        client_key: "5w21v5zr0oaehqjh47w40itl",
+        popup: {
+          // relative to whatever domain you’re on:
+          frameUrl: "/brevo-frame.html"
+        }
       }
     ]);
     Brevo.push(["track", "page_view"]);
   </script>
 
-  <!-- Primary Meta Tags -->
+  <!-- SEO meta tags… -->
   <title>RentROIcalc — Rental ROI & Refinance Calculator</title>
-  <meta name="description"
-    content="Analyze rental properties fast with RentROIcalc — the free cash-on-cash return and refinance break-even calculator, complete with charts and shareable links." />
-  <meta name="keywords"
-    content="rental calculator, cash-on-cash return, refinance break-even, rental property analysis, real estate investment calculator" />
-  <meta name="author" content="RentROIcalc" />
-
-  <!-- Open Graph / Facebook -->
-  <meta property="og:title" content="RentROIcalc — Rental ROI & Refinance Calculator" />
-  <meta property="og:description"
-    content="Analyze rental properties fast with RentROIcalc — free cash-on-cash return and refinance break-even calculations." />
-  <meta property="og:url" content="https://rentroicalc.com/" />
-  <meta property="og:image" content="https://rentroicalc.com/og-image.png" />
-
-  <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="RentROIcalc — Rental ROI & Refinance Calculator" />
-  <meta name="twitter:description"
-    content="Analyze rental properties fast with RentROIcalc — free cash-on-cash return and refinance break-even calculations." />
-  <meta name="twitter:image" content="https://rentroicalc.com/og-image.png" />
+  <meta
+    name="description"
+    content="Analyze rental properties fast with RentROIcalc — the free cash-on-cash return and refinance break-even calculator, complete with charts and shareable links."
+  />
+  <!-- …other meta tags…and structured data… -->
 </head>
 
 <body>
   <div id="app"></div>
   <script type="module" src="/src/main.ts"></script>
-  <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "FAQPage",
-        "mainEntity": [
-          {
-            "@type": "Question",
-            "name": "What is cash‑on‑cash return?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Cash‑on‑cash return is the annual pre‑tax cash flow divided by the total cash invested, expressed as a percentage."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "How do you calculate refinance break‑even?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Refinance break‑even is calculated by dividing the refinance closing costs by the monthly savings (old payment minus new payment)."
-            }
-          }
-        ]
-      }
-      </script>
-
+  <!-- …your FAQ JSON-LD block… -->
 </body>
-
 </html>
