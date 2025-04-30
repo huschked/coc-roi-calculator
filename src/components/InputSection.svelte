@@ -1,6 +1,40 @@
 <script lang="ts">
     import type { Inputs } from "../lib/formulas";
     export let form: Inputs;
+
+    // Local percent fields for user-friendly entry
+    let downPercentPct = (form.downPercent * 100).toFixed(2);
+    let interestRatePct = (form.interestRate * 100).toFixed(3);
+    let rentGrowthPct = (form.rentGrowthRate * 100).toFixed(2);
+    let vacancyratePct = (form.vacancyRate * 100).toFixed(2);
+
+    function syncDownPercent() {
+        const num = parseFloat(downPercentPct);
+        if (!isNaN(num)) {
+            form.downPercent = num / 100;
+        }
+    }
+
+    function syncInterestRate() {
+        const num = parseFloat(interestRatePct);
+        if (!isNaN(num)) {
+            form.interestRate = num / 100;
+        }
+    }
+
+    function syncRentGrowth() {
+        const num = parseFloat(rentGrowthPct);
+        if (!isNaN(num)) {
+            form.rentGrowthRate = num / 100;
+        }
+    }
+
+    function syncVacancyGrowth() {
+        const num = parseFloat(vacancyratePct);
+        if (!isNaN(num)) {
+            form.vacancyRate = num / 100;
+        }
+    }
 </script>
 
 <div class="grid gap-6 md:grid-cols-2 mt-8">
@@ -24,10 +58,10 @@
         />
     </label>
 
-    <!-- Down Payment -->
+    <!-- Down Payment (%) -->
     <label class="block">
         <div class="flex items-center gap-1">
-            <span class="label">Down‑Payment</span>
+            <span class="label">Down‑Payment (%)</span>
             <div class="tooltip-container">
                 ❓
                 <div class="tooltip">
@@ -40,8 +74,9 @@
             type="number"
             min="0"
             max="100"
-            step="0.1"
-            bind:value={form.downPercent}
+            step="0.01"
+            bind:value={downPercentPct}
+            on:blur={syncDownPercent}
         />
     </label>
 
@@ -85,10 +120,10 @@
         />
     </label>
 
-    <!-- Interest Rate -->
+    <!-- Interest Rate (%) -->
     <label class="block">
         <div class="flex items-center gap-1">
-            <span class="label">Interest Rate</span>
+            <span class="label">Interest Rate (%)</span>
             <div class="tooltip-container">
                 ❓
                 <div class="tooltip">
@@ -100,8 +135,9 @@
             class="input with-suffix"
             type="number"
             min="0"
+            max="100"
             step="0.001"
-            bind:value={form.interestRate}
+            bind:value={interestRatePct}
         />
     </label>
 
@@ -144,10 +180,32 @@
         />
     </label>
 
-    <!-- Vacancy Rate -->
+    <!-- Annual Rent Growth (%) -->
     <label class="block">
         <div class="flex items-center gap-1">
-            <span class="label">Vacancy Rate</span>
+            <span class="label">Annual Rent Growth (%)</span>
+            <div class="tooltip-container">
+                ❓
+                <div class="tooltip">
+                    Expected annual increase in rent due to market inflation or
+                    improvements.
+                </div>
+            </div>
+        </div>
+        <input
+            class="input with-suffix"
+            type="number"
+            min="0"
+            max="100"
+            step="0.01"
+            bind:value={rentGrowthPct}
+        />
+    </label>
+
+    <!-- Vacancy Rate (%) -->
+    <label class="block">
+        <div class="flex items-center gap-1">
+            <span class="label">Vacancy Rate (%)</span>
             <div class="tooltip-container">
                 ❓
                 <div class="tooltip">
@@ -162,7 +220,7 @@
             min="0"
             max="100"
             step="0.1"
-            bind:value={form.vacancyRate}
+            bind:value={vacancyratePct}
         />
     </label>
 
@@ -193,20 +251,17 @@
         @apply block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300;
     }
     .input {
-        @apply w-full rounded-md border border-gray-300 dark:border-gray-600 py-2 px-3
-           focus:border-primary focus:ring-primary;
+        @apply w-full rounded-md border border-gray-300 dark:border-gray-600 py-2 px-3 focus:border-primary focus:ring-primary;
     }
     .tooltip-container {
         @apply relative text-xs text-gray-400 dark:text-gray-500 cursor-pointer;
     }
-
     .tooltip {
         @apply absolute z-10 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 w-64 sm:w-48 mt-2 left-0 sm:left-1/2 transform sm:-translate-x-1/2;
         top: 100%;
         white-space: normal;
         max-width: 16rem;
     }
-
     .tooltip-container:hover .tooltip {
         display: block;
     }

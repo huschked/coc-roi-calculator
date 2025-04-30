@@ -1,136 +1,119 @@
 /**
  * All calculator math lives here so the UI stays clean.
  * -----------------------------------------------------
- *  - Keep every numeric input in *dollars* or *decimal* form
- *    (e.g. 6 % interest  →  0.06).
- *  - Functions are pure → easy to unit‑test later.
+ *  - User inputs in *percent* form (e.g. 5 → 5%).
+ *  - Inside we convert to *decimals* (5% → 0.05).
  */
 
-/*-------------------------------------------------------
-  Type describing every form field the UI will expose
-  -----------------------------------------------------*/
 export interface Inputs {
-    /* ---- Purchase & Rehab ---- */
-    purchasePrice: number;      // Contract price for the property
-    downPercent: number;      // e.g. 0.05 for 5 %
-    closingCosts: number;      // Title fees, origination, etc.
-    rehabCosts: number;      // Immediate renovation budget
-
-    /* ---- Financing ---- */
-    interestRate: number;       // Annual interest rate (decimal)
-    amortYears: number;       // Term of the loan in years
-
-    /* ---- Income & Expenses ---- */
-    monthlyRent: number;       // Gross scheduled rent
-    vacancyRate: number;       // Decimal fraction, e.g. 0.05 for 5 %
-    monthlyOpEx: number;       // All operating expenses (taxes, repairs, etc.)
-}
-
-/* ---------- NEW INTERFACE ---------- */
-/** Optional refinance inputs  */
-export interface RefiInputs {
+    purchasePrice: number;
+    downPercent: number;    // decimal (0.05 = 5%)
+    closingCosts: number;
+    rehabCosts: number;
+    interestRate: number;   // decimal (0.06625 = 6.625%)
+    amortYears: number;
+    monthlyRent: number;
+    vacancyRate: number;    // decimal (0.05 = 5%)
+    monthlyOpEx: number;
+    rentGrowthRate: number; // decimal (0.02 = 2%)
+  }
+  
+  export interface RefiInputs {
     enabled: boolean;
-    newLoanAmount: number;   // $  (user can copy old balance or cash‑out amount)
-    newRate: number;   // decimal (e.g. 0.06)
-    newTermYears: number;   // years
-    closingCosts: number;   // $ incurred at refi
-}
-
-/* ---------- REFI COMPUTATION ---------- */
-export function computeRefi(currentPmt: number, r: RefiInputs) {
-    if (!r.enabled) return null;
-
-    const newPmt = pmt(r.newRate / 12, r.newTermYears * 12, r.newLoanAmount);
-
-    // 1️⃣  use absolute values so payments are positive dollars
-    const monthlySavings = Math.abs(currentPmt) - Math.abs(newPmt);
-
-    // 2️⃣  guard against zero / negative savings
-    const breakEvenMonths =
-        monthlySavings > 0 ? r.closingCosts / monthlySavings : Infinity;
-
-    return { newPmt, monthlySavings, breakEvenMonths };
-}
-
-/*-------------------------------------------------------
-  Standard mortgage payment formula (constant amortisation)
-  PMT = payment per period (negative because cash outflow)
-  -----------------------------------------------------*/
-export function pmt(ratePerPeriod: number, nPeriods: number, present: number) {
+    newLoanAmount: number;
+    newRate: number;         // decimal (e.g. 0.055 = 5.5%)
+    newTermYears: number;
+    closingCosts: number;
+  }
+  
+  /** Standard mortgage payment formula (constant amortisation) */
+  export function pmt(ratePerPeriod: number, nPeriods: number, present: number) {
     return -(ratePerPeriod * present) / (1 - Math.pow(1 + ratePerPeriod, -nPeriods));
-}
+  }
+  
+  /** Compute main results */
+  export function compute(inputs: Inputs) {
+    const downPct   = +inputs.downPercent;
+    const intRate   = +inputs.interestRate;
+    const vacancy   = +inputs.vacancyRate;
+    const rentGrow  = +inputs.rentGrowthRate;
+  
+    // coerce everything else to Number
+    const P = +inputs.purchasePrice;
+    const C = +inputs.closingCosts;
+    const R = +inputs.rehabCosts;
+    const M = +inputs.monthlyRent;
+    const O = +inputs.monthlyOpEx;
+    const A = +inputs.amortYears;
+  
+    // now all arithmetic is numeric
+    const cashInvested = P * downPct + C + R;
+    const loanAmount   = P * (1 - downPct);
+    const rawPmt       = pmt(intRate / 12, A * 12, loanAmount);
+    const monthlyPmt   = Math.abs(rawPmt);
+  
+    const monthlyNOI   = M * (1 - vacancy) - O;
+    const monthlyCF    = monthlyNOI - monthlyPmt;
+    const annualCF     = monthlyCF * 12;
+    const cashOnCash   = annualCF / cashInvested;
+  
+    return { cashInvested, monthlyPmt, annualCashFlow: annualCF, cashOnCash };
+  }
+  
+  /** Compute refinance results or null if not enabled */
+  export function computeRefi(currentPmt: number, r: RefiInputs) {
+    if (!r.enabled) return null;
+  
+    const newPmt = pmt(r.newRate / 12, r.newTermYears * 12, r.newLoanAmount);
+    const monthlySavings = Math.abs(currentPmt) - Math.abs(newPmt);
+    const breakEvenMonths = monthlySavings > 0 ? r.closingCosts / monthlySavings : Infinity;
+  
+    return { newPmt, monthlySavings, breakEvenMonths };
+  }
+  
+  /**
+   * Build a yearly schedule of loan balance & cash flow.
+   * Rent grows at rentGrowthRate each year.
+   */
+  // formulas.ts
 
-/*-------------------------------------------------------
-  Core computation – returns everything the UI needs.
-  Add new derived values here; the UI auto‑updates.
-  -----------------------------------------------------*/
-export function compute(inputs: Inputs) {
-    /* ---- Cash invested upfront ---- */
-    const cashInvested =
-        inputs.purchasePrice * inputs.downPercent +
-        inputs.closingCosts +
-        inputs.rehabCosts;
-
-    /* ---- Debt service ---- */
-    const loanAmount = inputs.purchasePrice * (1 - inputs.downPercent);
-    const rawPmt = pmt(
-        inputs.interestRate / 12,      // monthly rate
-        inputs.amortYears * 12,        // number of months
-        loanAmount
-    );
-
-    const monthlyPmt = Math.abs(rawPmt);
-
-    /* ---- Net operating income (monthly) ---- */
-    const monthlyNOI =
-        inputs.monthlyRent * (1 - inputs.vacancyRate) - inputs.monthlyOpEx;
-
-    const monthlyCashFlow = monthlyNOI - monthlyPmt;
-    /* ---- Key returns ---- */
-    const annualCashFlow = (monthlyCashFlow) * 12;
-    const cashOnCash = annualCashFlow / cashInvested;
-
-    return { cashInvested, monthlyPmt, annualCashFlow, cashOnCash };
-}
-
-/**
- * Builds a yearly schedule of loan balance & cash flow.
- * @param inputs   Your Inputs object
- * @param years    How many years to project (default: 10)
- */
 export function amortizationSchedule(
-    inputs: Inputs,
-    years = 10
+  inputs: Inputs,
+  years = 10
 ): { year: number; balance: number; cashFlow: number }[] {
-    // Present value = loan amount
-    const pv = inputs.purchasePrice * (1 - inputs.downPercent);
-    const monthlyRate = inputs.interestRate / 12;
-    const totalMonths = inputs.amortYears * 12;
+  const pv = inputs.purchasePrice * (1 - inputs.downPercent);
+  const monthlyRate = inputs.interestRate / 12;
+  const totalMonths = inputs.amortYears * 12;
+  const pmtAmt = Math.abs(pmt(monthlyRate, totalMonths, pv));
 
-    // Payment amount (positive)
-    const pmtAmt = Math.abs(pmt(monthlyRate, totalMonths, pv));
+  // interpret rentGrowthRate as percent
+  // e.g. if user types "2" for 2%, we want 0.02
+  const growthDecimal = inputs.rentGrowthRate / 100;
 
-    // Monthly net operating income
+  let currentMonthlyRent = inputs.monthlyRent;
+  const schedule: { year: number; balance: number; cashFlow: number }[] = [];
+
+  for (let y = 0; y <= years; y++) {
+    const m = Math.min(y * 12, totalMonths);
+
+    const balance =
+      m >= totalMonths
+        ? 0
+        : pv * Math.pow(1 + monthlyRate, m) -
+          (pmtAmt / monthlyRate) * (Math.pow(1 + monthlyRate, m) - 1);
+
     const monthlyNOI =
-        inputs.monthlyRent * (1 - inputs.vacancyRate) - inputs.monthlyOpEx;
-    // Annual cash flow is constant
+      currentMonthlyRent * (1 - inputs.vacancyRate / 100) -
+      inputs.monthlyOpEx;
     const annualCashFlow = (monthlyNOI - pmtAmt) * 12;
 
-    const schedule: { year: number; balance: number; cashFlow: number }[] = [];
+    schedule.push({ year: y, balance, cashFlow: annualCashFlow });
 
-    for (let y = 0; y <= years; y++) {
-        const m = Math.min(y * 12, totalMonths);
+    // apply the _decimal_ growth
+    currentMonthlyRent *= 1 + growthDecimal;
+  }
 
-        // Outstanding balance formula for amortising loan
-        const balance =
-            m >= totalMonths
-                ? 0
-                : pv * Math.pow(1 + monthlyRate, m) -
-                (pmtAmt / monthlyRate) * (Math.pow(1 + monthlyRate, m) - 1);
-
-        schedule.push({ year: y, balance, cashFlow: annualCashFlow });
-    }
-
-    return schedule;
+  return schedule;
 }
 
+  

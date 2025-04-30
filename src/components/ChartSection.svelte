@@ -1,29 +1,24 @@
-<!-- ── src/components/ChartSection.svelte ── -->
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
     import type { Inputs } from "../lib/formulas";
     import { amortizationSchedule } from "../lib/formulas";
 
-    // horizon options
     const yearOptions = [5, 10, 15, 20, 25, 30];
 
-    /** Receive the main form inputs */
     export let form: Inputs;
-    /** How many years to plot */
     export let initialYears = 10;
     let projectYears = initialYears;
 
     let chart: any;
     let canvasEl: HTMLCanvasElement;
 
-    // Reactive yearly data when form or projectYears change
     $: yearly = amortizationSchedule(form, projectYears);
 
     onMount(async () => {
-        // Lazy‑load Chart.js so it isn't in the initial bundle
         const { default: Chart } = await import("chart.js/auto");
         const { default: zoomPlugin } = await import("chartjs-plugin-zoom");
         Chart.register(zoomPlugin);
+
         chart = new Chart(canvasEl, {
             type: "line",
             data: {
@@ -33,22 +28,30 @@
                         label: "Loan Balance",
                         data: yearly.map((d) => d.balance),
                         yAxisID: "balanceAxis",
-                        borderColor: "rgba(59, 130, 246, 1)", // blue‑500
+                        borderColor: "rgba(59, 130, 246, 1)",  // blue-500
                         backgroundColor: "rgba(59, 130, 246, 0.1)",
                         fill: false,
+                        tension: 0.4, // ← smooth curve
+                        pointRadius: 3, // nice dots
                     },
                     {
                         label: "Annual Cash Flow",
                         data: yearly.map((d) => d.cashFlow),
                         yAxisID: "cashFlowAxis",
-                        borderColor: "rgba(16, 185, 129, 1)", // emerald‑500
+                        borderColor: "rgba(16, 185, 129, 1)", // emerald-500
                         backgroundColor: "rgba(16, 185, 129, 0.1)",
                         fill: false,
+                        tension: 0.4,
+                        pointRadius: 3,
                     },
                 ],
             },
             options: {
                 responsive: true,
+                animation: {
+                    duration: 1200,
+                    easing: "easeOutQuart",
+                },
                 scales: {
                     balanceAxis: {
                         type: "linear",
@@ -58,8 +61,7 @@
                             text: "Balance ($)",
                         },
                         ticks: {
-                            callback: (val) =>
-                                `$${Number(val).toLocaleString()}`,
+                            callback: (val) => `$${Number(val).toLocaleString()}`,
                         },
                     },
                     cashFlowAxis: {
@@ -73,8 +75,7 @@
                             drawOnChartArea: false,
                         },
                         ticks: {
-                            callback: (val) =>
-                                `$${Number(val).toLocaleString()}`,
+                            callback: (val) => `$${Number(val).toLocaleString()}`,
                         },
                     },
                 },
@@ -84,8 +85,7 @@
                     },
                     tooltip: {
                         callbacks: {
-                            label: (ctx) =>
-                                `${ctx.dataset.label}: $${ctx.parsed.y.toLocaleString()}`,
+                            label: (ctx) => `${ctx.dataset.label}: $${ctx.parsed.y.toLocaleString()}`,
                         },
                     },
                     zoom: {
@@ -94,21 +94,21 @@
                             mode: "x",
                         },
                         zoom: {
-                            wheel: {
-                                enabled: true,
-                            },
-                            pinch: {
-                                enabled: true,
-                            },
+                            wheel: { enabled: true },
+                            pinch: { enabled: true },
                             mode: "x",
                         },
+                    },
+                },
+                elements: {
+                    line: {
+                        tension: 0.4, // smooth curve (again here for older chartjs)
                     },
                 },
             },
         });
     });
 
-    // Update chart when data changes
     $: if (chart) {
         chart.data.labels = yearly.map((d) => d.year.toString());
         chart.data.datasets[0].data = yearly.map((d) => d.balance);
@@ -119,7 +119,7 @@
     onDestroy(() => {
         chart?.destroy();
     });
-    // helper to reset zoom
+
     const resetZoom = () => chart?.resetZoom();
 </script>
 
@@ -141,7 +141,7 @@
             on:click={resetZoom}
             class="ml-auto text-sm text-primary hover:underline"
         >
-            Reset Zoom
+            Reset Zoom
         </button>
     </div>
     <canvas bind:this={canvasEl} class="w-full h-64"></canvas>
