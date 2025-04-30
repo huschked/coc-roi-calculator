@@ -286,7 +286,7 @@
   </section>
 
   <!-- Map -->
-  <MapSection {center} zoom={16} />
+  <MapSection {center} zoom={16} label={address}/>
 
   <!-- Save Button -->
   <div class="text-center mt-6">
