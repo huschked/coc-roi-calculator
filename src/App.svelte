@@ -18,24 +18,16 @@
   } from "./lib/formulas";
   import { readState, writeState } from "./lib/urlSync";
 
-  // 1) import Leaflet core + CSS
+  // Leaflet setup
   import L from "leaflet";
   import "leaflet/dist/leaflet.css";
-
-  // 2) import the three images from node_modules
   import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
   import iconUrl from "leaflet/dist/images/marker-icon.png";
   import shadowUrl from "leaflet/dist/images/marker-shadow.png";
-
-  // 3) override the default icon URLs
   delete L.Icon.Default.prototype._getIconUrl;
-  L.Icon.Default.mergeOptions({
-    iconRetinaUrl,
-    iconUrl,
-    shadowUrl,
-  });
+  L.Icon.Default.mergeOptions({ iconRetinaUrl, iconUrl, shadowUrl });
 
-  // ——— Only numeric inputs here ———
+  // Form state
   let form: Inputs = {
     purchasePrice: 300000,
     downPercent: 0.05,
@@ -48,10 +40,7 @@
     monthlyOpEx: 500,
     rentGrowthRate: 0.02,
   };
-
-  // free-text address
   let address = "";
-
   let refi: RefiInputs = {
     enabled: false,
     newLoanAmount: 250000,
@@ -59,20 +48,14 @@
     newTermYears: 30,
     closingCosts: 5000,
   };
-
   let savedScenarios: { name: string; inputs: Inputs }[] = [];
   let copied = false;
 
   onMount(() => {
-    // hydrate from URL
     Object.assign(form, readState<Inputs>());
     Object.assign(refi, readState<RefiInputs>());
-
-    // load saved scenarios
     const stored = localStorage.getItem("savedScenarios");
     if (stored) savedScenarios = JSON.parse(stored);
-
-    // restore address
     const last = localStorage.getItem("address");
     if (last) address = last;
   });
@@ -83,23 +66,21 @@
     savedScenarios = [...savedScenarios, { name, inputs: { ...form } }];
     localStorage.setItem("savedScenarios", JSON.stringify(savedScenarios));
   }
-
   function loadScenario(i: number) {
     form = { ...savedScenarios[i].inputs };
   }
-
   function deleteScenario(i: number) {
     savedScenarios.splice(i, 1);
+    savedScenarios = savedScenarios; // trigger reactivity
     localStorage.setItem("savedScenarios", JSON.stringify(savedScenarios));
   }
-
   function copyLink() {
     navigator.clipboard.writeText(location.href);
     copied = true;
     setTimeout(() => (copied = false), 1500);
   }
 
-  /** debounce & geocode */
+  // debounce & geocode
   let center: [number, number] = [39.833, -98.583];
   let addrTimer: ReturnType<typeof setTimeout>;
   $: if (address) {
@@ -127,58 +108,40 @@
     }, 500);
   }
 
-  // core & advanced computations
-  $: results = compute(form);
+  // computations
+  $: results     = compute(form);
   $: refiResults = computeRefi(results.monthlyPmt, refi);
-  $: advanced = computeAdvanced(form, form.amortYears);
+  $: advanced    = computeAdvanced(form, form.amortYears);
 
-  // sync numeric state back to URL
+  // sync URL state
   let urlTimer: ReturnType<typeof setTimeout>;
   $: {
     const {
-      purchasePrice,
-      downPercent,
-      closingCosts,
-      rehabCosts,
-      interestRate,
-      amortYears,
-      monthlyRent,
-      vacancyRate,
-      monthlyOpEx,
-      rentGrowthRate,
+      purchasePrice, downPercent, closingCosts,
+      rehabCosts, interestRate, amortYears,
+      monthlyRent, vacancyRate, monthlyOpEx,
+      rentGrowthRate
     } = form;
     const {
-      enabled,
-      newLoanAmount,
-      newRate,
-      newTermYears,
-      closingCosts: rc,
+      enabled, newLoanAmount, newRate,
+      newTermYears, closingCosts: rc
     } = refi;
-
     clearTimeout(urlTimer);
     urlTimer = setTimeout(() => {
       writeState({
-        purchasePrice,
-        downPercent,
-        closingCosts,
-        rehabCosts,
-        interestRate,
-        amortYears,
-        monthlyRent,
-        vacancyRate,
-        monthlyOpEx,
-        rentGrowthRate,
-        refiEnabled: enabled,
-        newLoanAmount,
-        newRate,
-        newTermYears,
-        refiClosingCosts: rc,
+        purchasePrice, downPercent, closingCosts,
+        rehabCosts, interestRate, amortYears,
+        monthlyRent, vacancyRate, monthlyOpEx,
+        rentGrowthRate, refiEnabled: enabled,
+        newLoanAmount, newRate, newTermYears,
+        refiClosingCosts: rc
       });
     }, 400);
   }
 </script>
 
 <main class="max-w-4xl mx-auto pt-4 px-4 space-y-6">
+
   <!-- Logo / Title -->
   <section class="flex flex-col items-center space-y-4">
     <img src="/page-title.png" alt="RentROIcalc Logo" class="w-full max-w-xs" />
@@ -186,42 +149,70 @@
   </section>
 
   <!-- Saved + Controls -->
-  <SavedScenarios
-    {savedScenarios}
-    {saveScenario}
-    {loadScenario}
-    {deleteScenario}
-  />
-  <div class="flex flex-wrap justify-center gap-4">
-    <button on:click={() => (location.href = ".")} class="btn-secondary">
-      Reset All Inputs
-    </button>
-    <button on:click={copyLink} class="btn-primary">
-      Copy Shareable Link
-    </button>
-  </div>
-  {#if copied}
-    <p class="text-center text-green-500">Link copied!</p>
-  {/if}
+  <section class="flex flex-col items-center space-y-4">
+    <SavedScenarios
+      {savedScenarios}
+      {saveScenario}
+      {loadScenario}
+      {deleteScenario}
+    />
+    <div class="flex flex-wrap justify-center gap-4">
+      <button on:click={() => (location.href = ".")} class="btn-secondary">
+        Reset All Inputs
+      </button>
+      <button on:click={copyLink} class="btn-primary">
+        Copy Shareable Link
+      </button>
+    </div>
+    {#if copied}
+      <p class="text-center text-green-500">Link copied!</p>
+    {/if}
+  </section>
 
-  <!-- Core Form Sections -->
-  <InputSection bind:form />
-  <RefiSection bind:refi />
-  <ResultsSection {results} {refiResults} />
-  <AdvancedMetrics {advanced} />
+  <!-- 1) Core Metrics -->
+  <section class="mt-8">
+    <h2 class="text-2xl font-semibold text-gray-100 mb-2">
+      Core Metrics
+    </h2>
+    <ResultsSection {results} {refiResults} />
+  </section>
 
-  <!-- Projection & Break-Even -->
-  <h2 class="text-2xl font-semibold">Projection</h2>
-  <ChartSection bind:form initialYears={form.amortYears} />
-  {#if refi.enabled && isFinite(refiResults.breakEvenMonths)}
-    <BreakEvenChart monthlyPmt={results.monthlyPmt} {refi} />
-  {/if}
+  <!-- 2) Advanced Metrics -->
+  <section class="mt-12">
+    <h2 class="text-2xl font-semibold text-gray-100 mb-2">
+      Advanced Metrics
+    </h2>
+    <AdvancedMetrics {advanced} />
+  </section>
 
-  <!-- Address & Map -->
-  <section class="mt-6">
+  <!-- 3) Assumptions -->
+  <section class="mt-12 bg-gray-800 p-6 rounded-xl">
+    <h2 class="text-2xl font-semibold text-gray-100 mb-2">
+      Assumptions
+    </h2>
+    <InputSection bind:form />
+    <RefiSection bind:refi />
+  </section>
+
+  <!-- 4) Projection -->
+  <section class="mt-12">
+    <h2 class="text-2xl font-semibold text-gray-100 mb-2">
+      Projection
+    </h2>
+    <ChartSection bind:form initialYears={form.amortYears} />
+    {#if refi.enabled && isFinite(refiResults.breakEvenMonths)}
+      <BreakEvenChart monthlyPmt={results.monthlyPmt} {refi} />
+    {/if}
+  </section>
+
+  <!-- 5) Location (tinted container) -->
+  <section class="mt-12 bg-gray-800 p-6 rounded-xl">
+    <h2 class="text-2xl font-semibold text-center text-gray-100 mb-2">
+      Location
+    </h2>
     <label
       for="property-address"
-      class="block mb-1 font-medium text-gray-700 dark:text-gray-300"
+      class="block mb-1 font-medium text-gray-300"
     >
       Property Address
     </label>
@@ -230,17 +221,23 @@
       type="text"
       bind:value={address}
       placeholder="123 Main St, Anytown, USA"
-      class="w-full rounded-md border border-gray-300 dark:border-gray-600 py-2 px-3 focus:border-primary focus:ring-primary"
+      class="w-full rounded-md border border-gray-600 py-2 px-3 focus:border-primary focus:ring-primary"
     />
+    <div class="mt-4">
+      <MapSection {center} zoom={16} label={address} />
+    </div>
   </section>
-  <MapSection {center} zoom={16} label={address} />
 
-  <!-- Save Button -->
-  <div class="text-center mt-6">
-    <button on:click={saveScenario} class="btn-primary-lg">
-      Save This Scenario
+  <!-- 6) Actions -->
+  <section class="mt-8 flex justify-center space-x-4">
+    <button on:click={copyLink} class="btn-primary">
+      Copy Link
     </button>
-  </div>
+    <button on:click={saveScenario} class="btn-primary-lg">
+      Save Scenario
+    </button>
+  </section>
+
 </main>
 
 <footer class="text-center text-sm py-6 border-t mt-10">
@@ -248,8 +245,12 @@
 </footer>
 
 <style lang="postcss">
+  /* uniform card height */
+  :global(.stat-card) {
+    @apply min-h-[8rem];
+  }
   .btn-primary {
-    /* your primary button styles (or Tailwind @apply) */
+    /* your primary button styles */
   }
   .btn-secondary {
     @apply bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200;

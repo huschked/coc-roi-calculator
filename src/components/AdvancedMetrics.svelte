@@ -41,9 +41,6 @@
 
 <!-- Header to separate sections -->
 <div class="mt-12">
-  <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-    Advanced Metrics
-  </h3>
 
   <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
     <!-- IRR -->
