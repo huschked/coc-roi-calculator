@@ -8,8 +8,21 @@
 
 <!-- Collapsible section -->
 <details bind:open={refi.enabled} class="mt-8">
-    <summary class="cursor-pointer font-medium text-primary">
-        Consider a refinance?
+    <!-- Styled button in place of the summary link -->
+    <summary>
+        <button
+            on:click|stopPropagation={() => (refi.enabled = !refi.enabled)}
+            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700
+                   text-white font-medium rounded-lg shadow
+                   focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+            <span class="mr-2"></span>
+            <span
+                >{refi.enabled
+                    ? "Hide Refinance Options"
+                    : "Consider a Refinance?"}</span
+            >
+        </button>
     </summary>
 
     <div class="grid gap-6 md:grid-cols-2 mt-4">
@@ -101,6 +114,16 @@
 </details>
 
 <style lang="postcss">
+    /* ——— Hide the browser’s built-in <details> arrow ——— */
+    details summary::-webkit-details-marker {
+        display: none;
+    }
+    details summary::marker {
+        display: none;
+    }
+    details summary {
+        list-style: none;
+    }
     .label {
         @apply block mb-1 text-sm font-medium text-gray-700 dark:text-gray-300;
     }

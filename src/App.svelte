@@ -3,6 +3,7 @@
   import InputSection from "./components/InputSection.svelte";
   import RefiSection from "./components/RefiSection.svelte";
   import ResultsSection from "./components/ResultsSection.svelte";
+  import AdvancedMetrics from "./components/AdvancedMetrics.svelte";
   import ChartSection from "./components/ChartSection.svelte";
   import BreakEvenChart from "./components/BreakEvenChart.svelte";
   import MapSection from "./components/MapSection.svelte";
@@ -10,11 +11,29 @@
 
   import {
     compute,
-    type Inputs,
     computeRefi,
+    computeAdvanced,
+    type Inputs,
     type RefiInputs,
   } from "./lib/formulas";
   import { readState, writeState } from "./lib/urlSync";
+
+  // 1) import Leaflet core + CSS
+  import L from "leaflet";
+  import "leaflet/dist/leaflet.css";
+
+  // 2) import the three images from node_modules
+  import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
+  import iconUrl from "leaflet/dist/images/marker-icon.png";
+  import shadowUrl from "leaflet/dist/images/marker-shadow.png";
+
+  // 3) override the default icon URLs
+  delete L.Icon.Default.prototype._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl,
+    iconUrl,
+    shadowUrl,
+  });
 
   // ——— Only numeric inputs here ———
   let form: Inputs = {
@@ -30,7 +49,7 @@
     rentGrowthRate: 0.02,
   };
 
-  // ——— Free-text address lives separately ———
+  // free-text address
   let address = "";
 
   let refi: RefiInputs = {
@@ -42,13 +61,10 @@
   };
 
   let savedScenarios: { name: string; inputs: Inputs }[] = [];
-  let seen = false;
   let copied = false;
 
   onMount(() => {
-    // restore newsletter popup state
-    seen = Boolean(localStorage.getItem("subSeen"));
-    // hydrate numeric state from URL
+    // hydrate from URL
     Object.assign(form, readState<Inputs>());
     Object.assign(refi, readState<RefiInputs>());
 
@@ -56,7 +72,7 @@
     const stored = localStorage.getItem("savedScenarios");
     if (stored) savedScenarios = JSON.parse(stored);
 
-    // restore last-used address
+    // restore address
     const last = localStorage.getItem("address");
     if (last) address = last;
   });
@@ -83,49 +99,40 @@
     setTimeout(() => (copied = false), 1500);
   }
 
-  function handleClose() {
-    seen = true;
-    localStorage.setItem("subSeen", "1");
-  }
-
-  /** Simple Nominatim lookup */
-  async function geocode(addr: string) {
-    const url = new URL("https://nominatim.openstreetmap.org/search");
-    url.searchParams.set("q", addr);
-    url.searchParams.set("format", "json");
-    url.searchParams.set("limit", "1");
-    const res = await fetch(url.toString(), {
-      headers: { "User-Agent": "RentROICalc/1.0" },
-    });
-    const [first] = (await res.json()) as Array<{ lat: string; lon: string }>;
-    if (first) {
-      return [parseFloat(first.lat), parseFloat(first.lon)] as [number, number];
-    }
-    throw new Error("No results");
-  }
-
-  // default map center (USA)
+  /** debounce & geocode */
   let center: [number, number] = [39.833, -98.583];
-
-  // debounce geocoding
   let addrTimer: ReturnType<typeof setTimeout>;
   $: if (address) {
     clearTimeout(addrTimer);
     addrTimer = setTimeout(async () => {
       try {
-        center = await geocode(address);
-        localStorage.setItem("address", address);
+        const url = new URL("https://nominatim.openstreetmap.org/search");
+        url.searchParams.set("q", address);
+        url.searchParams.set("format", "json");
+        url.searchParams.set("limit", "1");
+        const res = await fetch(url.toString(), {
+          headers: { "User-Agent": "RentROICalc/1.0" },
+        });
+        const [first] = (await res.json()) as Array<{
+          lat: string;
+          lon: string;
+        }>;
+        if (first) {
+          center = [parseFloat(first.lat), parseFloat(first.lon)];
+          localStorage.setItem("address", address);
+        }
       } catch {
-        // ignore lookup failures
+        /* ignore */
       }
     }, 500);
   }
 
-  // reactive calculations
+  // core & advanced computations
   $: results = compute(form);
   $: refiResults = computeRefi(results.monthlyPmt, refi);
+  $: advanced = computeAdvanced(form, form.amortYears);
 
-  // sync numeric state to URL
+  // sync numeric state back to URL
   let urlTimer: ReturnType<typeof setTimeout>;
   $: {
     const {
@@ -169,49 +176,6 @@
       });
     }, 400);
   }
-
-  /** Export saved scenarios to CSV */
-  function exportCSV() {
-    if (!savedScenarios.length) return;
-
-    const headers = [
-      "Name",
-      "Purchase Price",
-      "Down %",
-      "Closing Costs",
-      "Rehab Costs",
-      "Interest Rate %",
-      "Amort Years",
-      "Monthly Rent",
-      "Vacancy %",
-      "OpEx",
-      "Rent Growth %",
-    ];
-
-    const rows = savedScenarios.map(({ name, inputs }) => [
-      `"${name}"`,
-      inputs.purchasePrice,
-      (inputs.downPercent * 100).toFixed(2),
-      inputs.closingCosts,
-      inputs.rehabCosts,
-      (inputs.interestRate * 100).toFixed(3),
-      inputs.amortYears,
-      inputs.monthlyRent,
-      (inputs.vacancyRate * 100).toFixed(1),
-      inputs.monthlyOpEx,
-      (inputs.rentGrowthRate * 100).toFixed(2),
-    ]);
-
-    const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\r\n");
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "rentroicalc-scenarios.csv";
-    a.click();
-    URL.revokeObjectURL(url);
-  }
 </script>
 
 <main class="max-w-4xl mx-auto pt-4 px-4 space-y-6">
@@ -221,24 +185,13 @@
     <hr class="border-t border-gray-300 dark:border-gray-700 w-3/4" />
   </section>
 
-  <!-- Saved Scenarios + Export -->
+  <!-- Saved + Controls -->
   <SavedScenarios
     {savedScenarios}
     {saveScenario}
     {loadScenario}
     {deleteScenario}
   />
-  <div class="flex justify-center mt-4">
-    <button
-      on:click={exportCSV}
-      class="bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition"
-      disabled={savedScenarios.length === 0}
-    >
-      Export Scenarios to CSV
-    </button>
-  </div>
-
-  <!-- Reset / Copy Link -->
   <div class="flex flex-wrap justify-center gap-4">
     <button on:click={() => (location.href = ".")} class="btn-secondary">
       Reset All Inputs
@@ -251,24 +204,20 @@
     <p class="text-center text-green-500">Link copied!</p>
   {/if}
 
-  <!-- Core Form -->
+  <!-- Core Form Sections -->
   <InputSection bind:form />
   <RefiSection bind:refi />
   <ResultsSection {results} {refiResults} />
+  <AdvancedMetrics {advanced} />
 
-  <!-- Projection Chart -->
+  <!-- Projection & Break-Even -->
   <h2 class="text-2xl font-semibold">Projection</h2>
   <ChartSection bind:form initialYears={form.amortYears} />
-
-  <!-- Break-Even only if refinance is on with positive savings -->
-  {#if refi.enabled && (refiResults?.monthlySavings ?? 0) > 0}
-    <BreakEvenChart
-      monthlyPmt={results.monthlyPmt}
-      {refi}
-    />
+  {#if refi.enabled && isFinite(refiResults.breakEvenMonths)}
+    <BreakEvenChart monthlyPmt={results.monthlyPmt} {refi} />
   {/if}
 
-  <!-- Property Address -->
+  <!-- Address & Map -->
   <section class="mt-6">
     <label
       for="property-address"
@@ -284,9 +233,7 @@
       class="w-full rounded-md border border-gray-300 dark:border-gray-600 py-2 px-3 focus:border-primary focus:ring-primary"
     />
   </section>
-
-  <!-- Map -->
-  <MapSection {center} zoom={16} label={address}/>
+  <MapSection {center} zoom={16} label={address} />
 
   <!-- Save Button -->
   <div class="text-center mt-6">
@@ -302,7 +249,7 @@
 
 <style lang="postcss">
   .btn-primary {
-    /* add your primary button styles or Tailwind @apply here */
+    /* your primary button styles (or Tailwind @apply) */
   }
   .btn-secondary {
     @apply bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200;

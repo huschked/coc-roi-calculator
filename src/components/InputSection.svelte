@@ -225,7 +225,7 @@
     </label>
 
     <!-- Monthly OpEx -->
-    <label class="block md:col-span-2">
+    <label class="block">
         <div class="flex items-center gap-1">
             <span class="label">Monthly Operating Expenses ($)</span>
             <div class="tooltip-container">
