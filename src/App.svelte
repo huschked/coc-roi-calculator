@@ -6,7 +6,6 @@
   import AdvancedMetrics from "./components/AdvancedMetrics.svelte";
   import ChartSection from "./components/ChartSection.svelte";
   import BreakEvenChart from "./components/BreakEvenChart.svelte";
-  import MapSection from "./components/MapSection.svelte";
 
   import {
     compute,
@@ -16,15 +15,6 @@
     type RefiInputs,
   } from "./lib/formulas";
   import { readState, writeState } from "./lib/urlSync";
-
-  // Leaflet setup
-  import L from "leaflet";
-  import "leaflet/dist/leaflet.css";
-  import iconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
-  import iconUrl from "leaflet/dist/images/marker-icon.png";
-  import shadowUrl from "leaflet/dist/images/marker-shadow.png";
-  delete L.Icon.Default.prototype._getIconUrl;
-  L.Icon.Default.mergeOptions({ iconRetinaUrl, iconUrl, shadowUrl });
 
   // State
   let form: Inputs = {
@@ -46,7 +36,6 @@
     newTermYears: 30,
     closingCosts: 5000,
   };
-  let address = "";
   let savedScenarios: { name: string; inputs: Inputs }[] = [];
   let copied = false;
 
@@ -55,8 +44,6 @@
     Object.assign(refi, readState<RefiInputs>());
     const stored = localStorage.getItem("savedScenarios");
     if (stored) savedScenarios = JSON.parse(stored);
-    const last = localStorage.getItem("address");
-    if (last) address = last;
   });
 
   function saveScenario() {
@@ -79,35 +66,10 @@
     setTimeout(() => (copied = false), 1500);
   }
 
-  // Geocode
-  let center: [number, number] = [39.833, -98.583];
-  let addrTimer: ReturnType<typeof setTimeout>;
-  $: if (address) {
-    clearTimeout(addrTimer);
-    addrTimer = setTimeout(async () => {
-      try {
-        const url = new URL("https://nominatim.openstreetmap.org/search");
-        url.searchParams.set("q", address);
-        url.searchParams.set("format", "json");
-        url.searchParams.set("limit", "1");
-        const res = await fetch(url.toString(), {
-          headers: { "User-Agent": "RentROICalc/1.0" },
-        });
-        const [first] = (await res.json()) as Array<{ lat: string; lon: string }>;
-        if (first) {
-          center = [parseFloat(first.lat), parseFloat(first.lon)];
-          localStorage.setItem("address", address);
-        }
-      } catch {
-        /* ignore */
-      }
-    }, 500);
-  }
-
   // Computations
-  $: results     = compute(form);
+  $: results = compute(form);
   $: refiResults = computeRefi(results.monthlyPmt, refi);
-  $: advanced    = computeAdvanced(form, form.amortYears);
+  $: advanced = computeAdvanced(form, form.amortYears);
 
   // Sync URL
   let urlTimer: ReturnType<typeof setTimeout>;
@@ -124,7 +86,13 @@
       monthlyOpEx,
       rentGrowthRate,
     } = form;
-    const { enabled, newLoanAmount, newRate, newTermYears, closingCosts: rc } = refi;
+    const {
+      enabled,
+      newLoanAmount,
+      newRate,
+      newTermYears,
+      closingCosts: rc,
+    } = refi;
     clearTimeout(urlTimer);
     urlTimer = setTimeout(() => {
       writeState({
@@ -155,90 +123,160 @@
     <hr class="border-t border-gray-300 dark:border-gray-700 w-3/4" />
   </section>
 
-  <!-- Controls + Saved Dropdown -->
-  <section class="flex justify-center items-center gap-4">
-    <details class="relative inline-block">
-      <summary class="btn-secondary cursor-pointer list-none">
-        Saved Scenarios
-      </summary>
-      <ul class="absolute right-0 mt-2 w-48 bg-gray-800 p-4 rounded-xl shadow-lg z-10 space-y-2">
-        {#each savedScenarios as { name }, i}
-          <li class="flex justify-between items-center">
-            <span class="text-gray-100">{name}</span>
-            <div class="flex space-x-1">
-              <button on:click={() => loadScenario(i)} class="text-sm text-blue-400 hover:underline">
-                Load
-              </button>
-              <button on:click={() => deleteScenario(i)} class="text-sm text-red-400 hover:underline">
-                ×
-              </button>
-            </div>
-          </li>
-        {/each}
-      </ul>
-    </details>
+  <!-- Sticky Controls Header -->
+  <section
+    class="sticky top-0 z-50 backdrop-blur-lg bg-background/90 border-b border-white/5 shadow-lg"
+  >
+    <div
+      class="max-w-4xl mx-auto px-4 py-4 flex justify-center items-center gap-4"
+    >
+      <details class="relative inline-block">
+        <summary class="btn-secondary cursor-pointer list-none">
+          Saved Scenarios
+        </summary>
+        <ul
+          class="absolute right-0 mt-2 w-48 bg-gray-800 p-4 rounded-xl shadow-lg z-10 space-y-2"
+        >
+          {#each savedScenarios as { name }, i}
+            <li class="flex justify-between items-center">
+              <span class="text-gray-100">{name}</span>
+              <div class="flex space-x-1">
+                <button
+                  on:click={() => loadScenario(i)}
+                  class="text-sm text-blue-400 hover:underline"
+                >
+                  Load
+                </button>
+                <button
+                  on:click={() => deleteScenario(i)}
+                  class="text-sm text-red-400 hover:underline"
+                >
+                  ×
+                </button>
+              </div>
+            </li>
+          {/each}
+        </ul>
+      </details>
 
-    <button on:click={() => (location.href = ".")} class="btn-secondary">
-      Reset All Inputs
-    </button>
-    <button on:click={copyLink} class="btn-primary">
-      Copy Shareable Link
-    </button>
+      <button on:click={() => (location.href = ".")} class="btn-secondary">
+        Reset All Inputs
+      </button>
+      <button on:click={copyLink} class="btn-primary">
+        Copy Shareable Link
+      </button>
+    </div>
+    {#if copied}
+      <p class="text-center text-green-500 pb-2">Link copied!</p>
+    {/if}
   </section>
-  {#if copied}
-    <p class="text-center text-green-500">Link copied!</p>
-  {/if}
 
   <!-- 1) Core Metrics -->
-  <section class="mt-8">
-    <h2 class="text-2xl font-semibold text-gray-100 mb-2">Core Metrics</h2>
-    <ResultsSection {results} {refiResults} />
+  <section
+    class="mt-16 p-8 rounded-2xl bg-gradient-to-br from-blue-950/20 via-background to-background"
+  >
+    <h2
+      class="text-3xl font-display font-bold bg-gradient-to-r from-white via-blue-200 to-gray-400 bg-clip-text text-transparent mb-8 flex items-center gap-3"
+    >
+      <svg
+        class="w-8 h-8 text-blue-400"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        ><path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+        ></path></svg
+      >
+      Core Metrics
+    </h2>
+    <ResultsSection {results} {refiResults} irr={advanced.irr} />
   </section>
 
   <!-- 2) Advanced Metrics -->
-  <section class="mt-12">
-    <h2 class="text-2xl font-semibold text-gray-100 mb-2">Advanced Metrics</h2>
+  <section
+    class="mt-16 p-8 rounded-2xl bg-gradient-to-br from-purple-950/20 via-background to-background"
+  >
+    <h2
+      class="text-3xl font-display font-bold bg-gradient-to-r from-white via-purple-200 to-gray-400 bg-clip-text text-transparent mb-8 flex items-center gap-3"
+    >
+      <svg
+        class="w-8 h-8 text-purple-400"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        ><path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+        ></path></svg
+      >
+      Advanced Metrics
+    </h2>
     <AdvancedMetrics {advanced} />
   </section>
 
   <!-- 3) Assumptions -->
-  <section class="mt-12 bg-gray-800 p-6 rounded-xl">
-    <h2 class="text-2xl font-semibold text-gray-100 mb-2">Assumptions</h2>
+  <section class="mt-16 bg-gray-800 p-8 rounded-2xl border border-white/5">
+    <h2
+      class="text-3xl font-display font-bold bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent mb-8 flex items-center gap-3"
+    >
+      <svg
+        class="w-8 h-8 text-gray-400"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        ><path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+        ></path></svg
+      >
+      Assumptions
+    </h2>
     <InputSection bind:form />
-    <RefiSection bind:refi />
-  </section>
-
-  <!-- 4) Projection -->
-  <section class="mt-12">
-    <h2 class="text-2xl font-semibold text-gray-100 mb-2">Projection</h2>
-    <ChartSection bind:form initialYears={form.amortYears} />
-    {#if refi.enabled && isFinite(refiResults.breakEvenMonths)}
-      <BreakEvenChart monthlyPmt={results.monthlyPmt} {refi} />
-    {/if}
-  </section>
-
-  <!-- 5) Location -->
-  <section class="mt-12 bg-gray-800 p-6 rounded-xl">
-    <h2 class="text-2xl font-semibold text-center text-gray-100 mb-2">Location</h2>
-    <label for="property-address" class="block mb-1 text-gray-300">
-      Property Address
-    </label>
-    <input
-      id="property-address"
-      type="text"
-      bind:value={address}
-      placeholder="123 Main St, Anytown, USA"
-      class="w-full rounded-md border border-gray-600 py-2 px-3 focus:border-primary focus:ring-primary"
-    />
-    <div class="mt-4">
-      <MapSection {center} zoom={16} label={address} />
+    <div class="mt-8 pt-8 border-t border-white/10">
+      <RefiSection bind:refi />
     </div>
   </section>
 
-  <!-- 6) Actions -->
-  <section class="mt-8 flex justify-center space-x-4">
-    <button on:click={copyLink} class="btn-primary">Copy Link</button>
-    <button on:click={saveScenario} class="btn-primary-lg">Save Scenario</button>
+  <!-- 4) Projection -->
+  <section
+    class="mt-16 p-8 rounded-2xl bg-gradient-to-br from-slate-900/40 via-background to-background"
+  >
+    <h2
+      class="text-3xl font-display font-bold bg-gradient-to-r from-white via-green-200 to-gray-400 bg-clip-text text-transparent mb-8 flex items-center gap-3"
+    >
+      <svg
+        class="w-8 h-8 text-green-400"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        ><path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
+        ></path></svg
+      >
+      Financial Projection
+    </h2>
+    <ChartSection bind:form initialYears={form.amortYears} />
+    {#if refi.enabled && isFinite(refiResults.breakEvenMonths)}
+      <div class="mt-8">
+        <BreakEvenChart monthlyPmt={results.monthlyPmt} {refi} />
+      </div>
+    {/if}
+  </section>
+
+  <!-- 5) Actions -->
+  <section class="mt-16 mb-8 flex justify-center space-x-4">
+    <button on:click={saveScenario} class="btn-primary-lg">Save Scenario</button
+    >
   </section>
 </main>
 

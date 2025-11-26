@@ -18,8 +18,8 @@
   let canvasEl: HTMLCanvasElement;
 
   // 1) Recompute the refinance results on every change
-  $: refiResults     = computeRefi(monthlyPmt, refi);
-  $: monthlySavings  = refiResults?.monthlySavings  ?? 0;
+  $: refiResults = computeRefi(monthlyPmt, refi);
+  $: monthlySavings = refiResults?.monthlySavings ?? 0;
   $: breakEvenMonths = refiResults?.breakEvenMonths ?? Infinity;
 
   // 2) Build our data array
@@ -27,12 +27,20 @@
     refi.enabled && isFinite(breakEvenMonths)
       ? Array.from(
           { length: Math.ceil(breakEvenMonths * 1.2) + 1 },
-          (_, m) => ({ month: m, value: monthlySavings * m - refi.closingCosts })
+          (_, m) => ({
+            month: m,
+            value: monthlySavings * m - refi.closingCosts,
+          }),
         )
       : [{ month: 0, value: -refi.closingCosts }];
 
   onMount(async () => {
     const { default: Chart } = await import("chart.js/auto");
+
+    // Set global defaults for dark mode
+    Chart.defaults.color = "#94a3b8";
+    Chart.defaults.borderColor = "rgba(255, 255, 255, 0.1)";
+
     chart = new Chart(canvasEl, {
       type: "line",
       data: {
@@ -45,39 +53,57 @@
             borderColor: (ctx: any) => {
               const y = ctx.parsed?.y ?? ctx.raw ?? 0;
               return y < 0
-                ? "rgba(239,68,68,1)"   // red-500
-                : "rgba(16,185,129,1)"; // emerald-500
+                ? "#ef4444" // danger
+                : "#10b981"; // accent
             },
             // 4) Fill area: green above 0, red below
             fill: {
               target: "origin",
-              above: "rgba(16,185,129,0.2)",
-              below: "rgba(239,68,68,0.2)",
+              above: "rgba(16, 185, 129, 0.1)",
+              below: "rgba(239, 68, 68, 0.1)",
             },
             tension: 0.4,
-            pointRadius: 2,
+            pointRadius: 0,
+            pointHoverRadius: 4,
           },
         ],
       },
       options: {
         responsive: true,
+        maintainAspectRatio: false,
         scales: {
           x: {
-            title: { display: true, text: "Month", color: "#fff" },
-            ticks: { color: "#aaa" },
-            grid: { color: "rgba(255,255,255,0.1)" },
+            title: { display: true, text: "Month", color: "#64748b" },
+            ticks: { color: "#94a3b8" },
+            grid: { display: false },
           },
           y: {
-            title: { display: true, text: "Savings ($)", color: "#fff" },
+            title: { display: true, text: "Savings ($)", color: "#64748b" },
             ticks: {
-              color: "#aaa",
+              color: "#94a3b8",
               callback: (v: any) => `$${Number(v).toLocaleString()}`,
             },
-            grid: { color: "rgba(255,255,255,0.1)" },
+            grid: { color: "rgba(255,255,255,0.05)" },
           },
         },
         plugins: {
-          legend: { labels: { color: "#fff" } },
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: "rgba(15, 23, 42, 0.9)",
+            titleColor: "#f8fafc",
+            bodyColor: "#cbd5e1",
+            borderColor: "rgba(255, 255, 255, 0.1)",
+            borderWidth: 1,
+            padding: 12,
+            displayColors: false,
+            callbacks: {
+              label: (ctx) => `Savings: $${ctx.parsed.y.toLocaleString()}`,
+            },
+          },
+        },
+        interaction: {
+          mode: "index",
+          intersect: false,
         },
       },
     });
@@ -95,23 +121,46 @@
   });
 </script>
 
-<figure class="mt-10 p-6 bg-gray-800 rounded-2xl shadow">
-  <h3 class="text-xl font-semibold mb-4 text-white">
+<div class="glass-panel p-6">
+  <h3
+    class="text-lg font-display font-bold text-white mb-4 flex items-center gap-2"
+  >
+    <svg
+      class="w-5 h-5 text-accent"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      ><path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+      ></path></svg
+    >
     Break-Even Timeline
   </h3>
 
-  <canvas bind:this={canvasEl} class="w-full h-48"></canvas>
+  <div class="relative w-full h-[300px]">
+    <canvas bind:this={canvasEl}></canvas>
+  </div>
 
   {#if refi.enabled && isFinite(breakEvenMonths)}
-    <figcaption class="mt-4 text-sm text-gray-300">
-      This chart shows your cumulative refinance savings over time. You start
-      at – your closing costs
-      (<code>–${refi.closingCosts.toLocaleString()}</code>), then each month add
-      your monthly savings
-      (<code>+${monthlySavings.toLocaleString()}</code>). When the line crosses
-      zero at about <strong>{breakEvenMonths.toFixed(1)} months</strong>
-      (~{(breakEvenMonths / 12).toFixed(2)} years), you’ve fully recouped those
-      costs.
-    </figcaption>
+    <div
+      class="mt-4 p-3 bg-surface/50 rounded-lg border border-white/5 text-sm text-gray-400 leading-relaxed"
+    >
+      You start at <span class="text-danger font-medium"
+        >–${refi.closingCosts.toLocaleString()}</span
+      >
+      (closing costs). Each month you save
+      <span class="text-accent font-medium"
+        >+${monthlySavings.toLocaleString()}</span
+      >.
+      <div class="mt-2 pt-2 border-t border-white/5">
+        Break-even in <strong class="text-white"
+          >{breakEvenMonths.toFixed(1)} months</strong
+        >
+        (~{(breakEvenMonths / 12).toFixed(1)} years).
+      </div>
+    </div>
   {/if}
-</figure>
+</div>

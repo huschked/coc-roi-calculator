@@ -1,59 +1,119 @@
 /**
- * All calculator math lives here so the UI stays clean.
- * -----------------------------------------------------
- *  - User inputs in *percent* form (e.g. 5 → 5%).
- *  - Inside we convert to *decimals* (5% → 0.05).
+ * Real Estate Investment Calculator - Core Formulas
+ * All calculations use decimal format internally (e.g., 0.05 = 5%)
  */
 
 export interface Inputs {
   purchasePrice: number;
-  downPercent: number;    // decimal (0.05 = 5%)
+  downPercent: number;      // decimal: 0.05 = 5%
   closingCosts: number;
   rehabCosts: number;
-  interestRate: number;   // decimal (0.06625 = 6.625%)
+  interestRate: number;      // decimal: 0.06625 = 6.625%
   amortYears: number;
   monthlyRent: number;
-  vacancyRate: number;    // decimal (0.05 = 5%)
+  vacancyRate: number;       // decimal: 0.05 = 5%
+
+  // Expense mode toggle
+  useDetailedExpenses: boolean;
+
+  // Simple mode (single field)
   monthlyOpEx: number;
-  rentGrowthRate: number; // decimal (0.02 = 2%)
+
+  // Detailed mode (itemized expenses)
+  propertyTaxes: number;        // monthly
+  insurance: number;            // monthly
+  repairs: number;              // monthly
+  propertyMgmtPercent: number;  // decimal: 0.10 = 10% of rent
+  capexReserves: number;        // monthly
+  hoaFees: number;              // monthly
+
+  rentGrowthRate: number;    // decimal: 0.02 = 2%
+  appreciationRate: number;  // decimal: 0.03 = 3%
+  marketTrendAdjustment: number;  // decimal: 0.005 = 0.5%
+  locationScore: number;     // 1-10
 }
 
 export interface RefiInputs {
   enabled: boolean;
   newLoanAmount: number;
-  newRate: number;        // decimal (0.055 = 5.5%)
+  newRate: number;           // decimal: 0.055 = 5.5%
   newTermYears: number;
   closingCosts: number;
 }
 
-/** Standard mortgage payment formula (constant amortisation) */
-export function pmt(ratePerPeriod: number, nPeriods: number, present: number) {
-  return -(ratePerPeriod * present) /
-         (1 - Math.pow(1 + ratePerPeriod, -nPeriods));
+/**
+ * Calculate monthly mortgage payment using standard amortization formula
+ */
+export function calculateMonthlyPayment(
+  principal: number,
+  annualRate: number,
+  years: number
+): number {
+  if (principal <= 0 || years <= 0) return 0;
+  if (annualRate === 0) return principal / (years * 12);
+
+  const monthlyRate = annualRate / 12;
+  const numPayments = years * 12;
+
+  return (principal * monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
+    (Math.pow(1 + monthlyRate, numPayments) - 1);
 }
 
-/** Compute the 4 core outputs */
+/**
+ * Calculate total monthly operating expenses
+ * Uses either simple mode (single monthlyOpEx) or detailed mode (itemized expenses)
+ */
+export function calculateMonthlyOpEx(inputs: Inputs): number {
+  if (!inputs.useDetailedExpenses) {
+    return Number(inputs.monthlyOpEx) || 0;
+  }
+
+  // Detailed mode: sum all itemized expenses
+  const propertyTaxes = Number(inputs.propertyTaxes) || 0;
+  const insurance = Number(inputs.insurance) || 0;
+  const repairs = Number(inputs.repairs) || 0;
+  const capexReserves = Number(inputs.capexReserves) || 0;
+  const hoaFees = Number(inputs.hoaFees) || 0;
+
+  // Property management is a percentage of rent
+  const monthlyRent = Number(inputs.monthlyRent) || 0;
+  const propertyMgmtPercent = Number(inputs.propertyMgmtPercent) || 0;
+  const propertyMgmt = monthlyRent * propertyMgmtPercent;
+
+  return propertyTaxes + insurance + repairs + capexReserves + hoaFees + propertyMgmt;
+}
+
+/**
+ * Calculate core investment metrics
+ */
 export function compute(inputs: Inputs) {
-  const P = +inputs.purchasePrice;
-  const d = +inputs.downPercent;
-  const C = +inputs.closingCosts;
-  const R = +inputs.rehabCosts;
+  // Ensure all inputs are numbers
+  const purchasePrice = Number(inputs.purchasePrice) || 0;
+  const downPercent = Number(inputs.downPercent) || 0;
+  const closingCosts = Number(inputs.closingCosts) || 0;
+  const rehabCosts = Number(inputs.rehabCosts) || 0;
+  const interestRate = Number(inputs.interestRate) || 0;
+  const amortYears = Number(inputs.amortYears) || 30;
+  const monthlyRent = Number(inputs.monthlyRent) || 0;
+  const vacancyRate = Number(inputs.vacancyRate) || 0;
 
-  const cashInvested = P * d + C + R;
-  const loanAmount   = P * (1 - d);
+  // Calculate cash invested
+  const downPayment = purchasePrice * downPercent;
+  const cashInvested = downPayment + closingCosts + rehabCosts;
 
-  const rawPmt = pmt(
-    +inputs.interestRate / 12,
-    +inputs.amortYears * 12,
-    loanAmount
-  );
-  const monthlyPmt = Math.abs(rawPmt);
+  // Calculate loan details
+  const loanAmount = purchasePrice - downPayment;
+  const monthlyPmt = calculateMonthlyPayment(loanAmount, interestRate, amortYears);
 
-  const monthlyNOI = +inputs.monthlyRent * (1 - +inputs.vacancyRate)
-                   - +inputs.monthlyOpEx;
-  const monthlyCF  = monthlyNOI - monthlyPmt;
-  const annualCF   = monthlyCF * 12;
-  const cashOnCash = annualCF / cashInvested;
+  // Calculate cash flow using helper function for expenses
+  const monthlyOpEx = calculateMonthlyOpEx(inputs);
+  const effectiveRent = monthlyRent * (1 - vacancyRate);
+  const monthlyNOI = effectiveRent - monthlyOpEx;
+  const monthlyCF = monthlyNOI - monthlyPmt;
+  const annualCF = monthlyCF * 12;
+
+  // Calculate cash-on-cash return
+  const cashOnCash = cashInvested > 0 ? annualCF / cashInvested : 0;
 
   return {
     cashInvested,
@@ -63,81 +123,119 @@ export function compute(inputs: Inputs) {
   };
 }
 
-/** Compute refinance results or null if not enabled */
-export function computeRefi(currentPmt: number, r: RefiInputs) {
-  if (!r.enabled) return null;
+/**
+ * Calculate refinance metrics
+ */
+export function computeRefi(currentPmt: number, refi: RefiInputs) {
+  if (!refi.enabled) return null;
 
-  const newPmt = pmt(r.newRate / 12, r.newTermYears * 12, r.newLoanAmount);
-  const savings = Math.abs(currentPmt) - Math.abs(newPmt);
-  const breakeven = savings > 0 ? r.closingCosts / savings : Infinity;
+  const newPmt = calculateMonthlyPayment(
+    Number(refi.newLoanAmount) || 0,
+    Number(refi.newRate) || 0,
+    Number(refi.newTermYears) || 30
+  );
+
+  const monthlySavings = currentPmt - newPmt;
+  const closingCosts = Number(refi.closingCosts) || 0;
+  const breakEvenMonths = monthlySavings > 0 ? closingCosts / monthlySavings : Infinity;
 
   return {
     newPmt,
-    monthlySavings: savings,
-    breakEvenMonths: breakeven,
+    monthlySavings,
+    breakEvenMonths,
   };
 }
 
 /**
- * Yearly amortization schedule plus growing cash flow.
- * ✅ Treat rates as decimals.  No extra “/100” here.
+ * Generate amortization schedule with cash flows
  */
 export function amortizationSchedule(
   inputs: Inputs,
-  years = 10
-): { year: number; balance: number; cashFlow: number }[] {
-  const pv          = +inputs.purchasePrice * (1 - +inputs.downPercent);
-  const monthlyRate = +inputs.interestRate / 12;
-  const totalMonths = +inputs.amortYears * 12;
-  const pmtAmt      = Math.abs(pmt(monthlyRate, totalMonths, pv));
+  years: number = 10
+): Array<{ year: number; balance: number; cashFlow: number }> {
+  const purchasePrice = Number(inputs.purchasePrice) || 0;
+  const downPercent = Number(inputs.downPercent) || 0;
+  const interestRate = Number(inputs.interestRate) || 0;
+  const amortYears = Number(inputs.amortYears) || 30;
+  const monthlyRent = Number(inputs.monthlyRent) || 0;
+  const vacancyRate = Number(inputs.vacancyRate) || 0;
+  const rentGrowthRate = Number(inputs.rentGrowthRate) || 0;
 
-  let rent = inputs.monthlyRent;
-  const schedule: { year: number; balance: number; cashFlow: number }[] = [];
+  const loanAmount = purchasePrice * (1 - downPercent);
+  const monthlyRate = interestRate / 12;
+  const totalMonths = amortYears * 12;
+  const monthlyPmt = calculateMonthlyPayment(loanAmount, interestRate, amortYears);
 
-  for (let y = 0; y <= years; y++) {
-    const m = Math.min(y * 12, totalMonths);
+  const schedule: Array<{ year: number; balance: number; cashFlow: number }> = [];
+  let currentRent = monthlyRent;
 
-    // remaining balance formula
-    const balance =
-      m >= totalMonths
-        ? 0
-        : pv * Math.pow(1 + monthlyRate, m)
-          - (pmtAmt / monthlyRate) * (Math.pow(1 + monthlyRate, m) - 1);
+  for (let year = 0; year <= years; year++) {
+    const monthsPassed = Math.min(year * 12, totalMonths);
 
-    // here vacancyRate is already a decimal
-    const monthlyNOI = rent * (1 - +inputs.vacancyRate) - +inputs.monthlyOpEx;
-    const annualCF   = (monthlyNOI - pmtAmt) * 12;
+    // Calculate remaining balance
+    let balance = 0;
+    if (monthsPassed < totalMonths && monthlyRate > 0) {
+      balance = loanAmount * Math.pow(1 + monthlyRate, monthsPassed) -
+        monthlyPmt * (Math.pow(1 + monthlyRate, monthsPassed) - 1) / monthlyRate;
+    }
+    balance = Math.max(0, balance); // Ensure non-negative
 
-    schedule.push({ year: y, balance, cashFlow: annualCF });
+    // Calculate annual cash flow for this year using helper
+    const monthlyOpEx = calculateMonthlyOpEx(inputs);
+    const effectiveRent = currentRent * (1 - vacancyRate);
+    const monthlyNOI = effectiveRent - monthlyOpEx;
+    const monthlyCF = monthlyNOI - monthlyPmt;
+    const annualCF = monthlyCF * 12;
 
-    // grow next year’s rent by decimal rate
-    rent *= 1 + +inputs.rentGrowthRate;
+    schedule.push({ year, balance, cashFlow: annualCF });
+
+    // Grow rent for next year
+    currentRent *= (1 + rentGrowthRate);
   }
 
   return schedule;
 }
 
 /**
- * Newton’s method IRR, equity multiple, NPV, payback.
- * Uses the _remaining principal_ to compute true net sale proceeds.
+ * Calculate IRR using Newton-Raphson method
  */
-export function irr(cashFlows: number[], guess = 0.1): number {
-  const maxIter = 50, tol = 1e-6;
-  let rate = guess;
+export function calculateIRR(cashFlows: number[]): number {
+  if (cashFlows.length === 0) return 0;
 
-  for (let i = 0; i < maxIter; i++) {
-    let npv = 0, deriv = 0;
+  // Check if all cash flows are the same sign (no IRR exists)
+  const allPositive = cashFlows.every(cf => cf >= 0);
+  const allNegative = cashFlows.every(cf => cf <= 0);
+  if (allPositive || allNegative) return Infinity;
+
+  let rate = 0.1; // Initial guess: 10%
+  const maxIterations = 100;
+  const tolerance = 0.00001;
+
+  for (let i = 0; i < maxIterations; i++) {
+    let npv = 0;
+    let dnpv = 0;
+
     for (let t = 0; t < cashFlows.length; t++) {
-      npv   += cashFlows[t] / Math.pow(1 + rate, t);
-      deriv -= t * cashFlows[t] / Math.pow(1 + rate, t + 1);
+      npv += cashFlows[t] / Math.pow(1 + rate, t);
+      dnpv -= t * cashFlows[t] / Math.pow(1 + rate, t + 1);
     }
-    const delta = npv / deriv;
-    rate -= delta;
-    if (Math.abs(delta) < tol) break;
+
+    if (Math.abs(npv) < tolerance) return rate;
+    if (Math.abs(dnpv) < tolerance) break; // Derivative too small
+
+    rate = rate - npv / dnpv;
+
+    // Prevent extreme values
+    if (rate < -0.99) rate = -0.99;
+    if (rate > 10) return Infinity;
   }
+
   return rate;
 }
 
+/**
+ * Calculate advanced investment metrics
+ */
 export function computeAdvanced(
   inputs: Inputs,
   years: number
@@ -147,58 +245,68 @@ export function computeAdvanced(
   npv: number;
   paybackYears: number;
 } {
-  // 1️⃣ grab the static results plus schedule
+  // Get core metrics
   const { cashInvested, annualCashFlow } = compute(inputs);
   const schedule = amortizationSchedule(inputs, years);
 
-  // 2️⃣ net sale proceeds = assumed sale price (here cost) minus remaining balance
-  const salePrice      = +inputs.purchasePrice;          // or an ARV, your choice
-  const remainingLoan  = schedule[years].balance;
-  const saleProceeds   = salePrice - remainingLoan;
+  // Ensure all inputs are numbers
+  const purchasePrice = Number(inputs.purchasePrice) || 0;
+  const appreciationRate = Number(inputs.appreciationRate) || 0;
+  const marketTrendAdjustment = Number(inputs.marketTrendAdjustment) || 0;
+  const rentGrowthRate = Number(inputs.rentGrowthRate) || 0;
 
-  // 3️⃣ build full cash‐flow array
-  const cashFlows: number[] = [];
-  cashFlows.push(-cashInvested);
-  for (let y = 1; y <= years; y++) {
-    // grow annualCF each year
-    const cf = annualCashFlow * Math.pow(1 + +inputs.rentGrowthRate, y - 1);
+  // Calculate sale price at end of holding period
+  const netAppreciationRate = appreciationRate + marketTrendAdjustment;
+  const salePrice = purchasePrice * Math.pow(1 + netAppreciationRate, years);
+
+  // Get remaining loan balance
+  const remainingLoan = schedule[years]?.balance || 0;
+  const saleProceeds = salePrice - remainingLoan;
+
+  // Build cash flow array
+  const cashFlows: number[] = [-cashInvested];
+
+  for (let year = 1; year <= years; year++) {
+    const yearlyGrowth = Math.pow(1 + rentGrowthRate, year - 1);
+    const cf = annualCashFlow * yearlyGrowth;
     cashFlows.push(cf);
   }
+
+  // Add sale proceeds to final year
   cashFlows[years] += saleProceeds;
 
-  // 4️⃣ IRR
-  const irrVal = irr(cashFlows);
+  // Calculate IRR
+  const irrValue = calculateIRR(cashFlows);
 
-  // 5️⃣ total positive inflows / outflow
-  const totalInflows = cashFlows
-    .slice(1)
-    .reduce((sum, cf) => sum + cf, 0);
-  const eqMult = totalInflows / cashInvested;
+  // Calculate equity multiple
+  const totalInflows = cashFlows.slice(1).reduce((sum, cf) => sum + cf, 0);
+  const equityMultiple = cashInvested > 0 ? totalInflows / cashInvested : 0;
 
-  // 6️⃣ NPV @ 8%
-  const discount = 0.08;
-  const npv = cashFlows.reduce(
-    (sum, cf, t) => sum + cf / Math.pow(1 + discount, t),
-    0
-  );
+  // Calculate NPV @ 8%
+  const discountRate = 0.08;
+  const npv = cashFlows.reduce((sum, cf, t) => {
+    return sum + cf / Math.pow(1 + discountRate, t);
+  }, 0);
 
-  // 7️⃣ payback period
-  let cum = -cashInvested, payback = Infinity;
+  // Calculate payback period
+  let cumulativeCF = -cashInvested;
+  let paybackYears = Infinity;
+
   for (let t = 1; t < cashFlows.length; t++) {
-    cum += cashFlows[t];
-    if (cum >= 0) {
-      // fractional payback in year t
-      payback = t - 1 + (cashInvested + cashFlows
-        .slice(1, t)
-        .reduce((a, b) => a + b, 0)) / cashFlows[t];
+    cumulativeCF += cashFlows[t];
+    if (cumulativeCF >= 0) {
+      // Linear interpolation for fractional year
+      const previousCumulative = cumulativeCF - cashFlows[t];
+      const fraction = -previousCumulative / cashFlows[t];
+      paybackYears = t - 1 + fraction;
       break;
     }
   }
 
   return {
-    irr:           irrVal,
-    equityMultiple: eqMult,
+    irr: irrValue,
+    equityMultiple,
     npv,
-    paybackYears:  payback,
+    paybackYears,
   };
 }

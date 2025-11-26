@@ -12,11 +12,11 @@
 
   // point Leaflet at the images in /public/leaflet
   L.Icon.Default.mergeOptions({
-    iconUrl:      '/leaflet/marker-icon.png',
-    iconRetinaUrl:'/leaflet/marker-icon-2x.png',
-    shadowUrl:    '/leaflet/marker-shadow.png'
+    iconUrl: "/leaflet/marker-icon.png",
+    iconRetinaUrl: "/leaflet/marker-icon-2x.png",
+    shadowUrl: "/leaflet/marker-shadow.png",
   });
-  
+
   let map: L.Map;
   let container: HTMLDivElement;
   let marker: L.Marker;
@@ -27,9 +27,9 @@
       zoom,
       layers: [
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution: "&copy; OpenStreetMap contributors"
-        })
-      ]
+          attribution: "&copy; OpenStreetMap contributors",
+        }),
+      ],
     });
 
     // create a marker at the initial center
@@ -54,12 +54,16 @@
   });
 </script>
 
-<div bind:this={container} class="w-full h-64 rounded-2xl shadow-lg"></div>
+<div
+  class="glass-panel p-2 h-64 rounded-2xl shadow-lg overflow-hidden relative z-0"
+>
+  <div bind:this={container} class="w-full h-full rounded-xl z-0"></div>
+</div>
 
 <style>
-  .leaflet-container {
+  :global(.leaflet-container) {
     width: 100%;
     height: 100%;
+    z-index: 0;
   }
-  /* if your map container isn’t using the `.leaflet-container` class, ensure your wrapper has a fixed height */
 </style>

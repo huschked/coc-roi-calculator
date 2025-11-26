@@ -1,6 +1,43 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-gray-100 font-sans antialiased;
+    background-image: 
+      radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.08), transparent 25%), 
+      radial-gradient(circle at 85% 30%, rgba(16, 185, 129, 0.08), transparent 25%);
+    background-attachment: fixed;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-surface/50 backdrop-blur-md border border-white/10 shadow-xl rounded-2xl;
+  }
+  
+  .input-field {
+    @apply w-full bg-slate-900/50 border border-slate-700 rounded-lg px-4 py-2 text-gray-100 focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none;
+  }
+
+  .btn-primary {
+    @apply bg-gradient-to-r from-primary to-blue-600 text-white font-semibold px-6 py-2 rounded-lg shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all active:translate-y-0;
+  }
+
+  .btn-secondary {
+    @apply bg-slate-800 text-gray-300 border border-slate-700 font-medium px-4 py-2 rounded-lg hover:bg-slate-700 hover:text-white transition-all;
+  }
+  
+  .stat-value {
+    @apply font-display font-bold tracking-tight;
+  }
+}
 
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
