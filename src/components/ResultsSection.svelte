@@ -80,7 +80,7 @@
         ></path></svg
       >
       <div
-        class="absolute z-20 hidden w-64 p-3 text-xs text-white bg-slate-900 border border-slate-700 rounded-lg shadow-xl -right-2 top-6 group-hover/icon:block"
+        class="absolute z-20 hidden w-64 p-3 text-xs text-white bg-slate-900 border border-slate-700 rounded-lg shadow-xl right-0 top-6 group-hover/icon:block"
       >
         Total upfront capital required: down payment + closing costs + rehab
         budget. This is your initial investment.
@@ -131,7 +131,7 @@
         ></path></svg
       >
       <div
-        class="absolute z-20 hidden w-64 p-3 text-xs text-white bg-slate-900 border border-slate-700 rounded-lg shadow-xl -right-2 top-6 group-hover/icon:block"
+        class="absolute z-20 hidden w-64 p-3 text-xs text-white bg-slate-900 border border-slate-700 rounded-lg shadow-xl right-0 top-6 group-hover/icon:block"
       >
         Monthly mortgage payment (principal + interest only). Does not include
         property taxes, insurance, or other expenses.
@@ -187,7 +187,7 @@
         ></path></svg
       >
       <div
-        class="absolute z-20 hidden w-64 p-3 text-xs text-white bg-slate-900 border border-slate-700 rounded-lg shadow-xl -right-2 top-6 group-hover/icon:block"
+        class="absolute z-20 hidden w-64 p-3 text-xs text-white bg-slate-900 border border-slate-700 rounded-lg shadow-xl right-0 top-6 group-hover/icon:block"
       >
         Annual rental income minus all operating expenses (taxes, insurance,
         maintenance, management, etc.). Positive cash flow means the property
@@ -252,7 +252,7 @@
         ></path></svg
       >
       <div
-        class="absolute z-20 hidden w-64 p-3 text-xs text-white bg-slate-900 border border-slate-700 rounded-lg shadow-xl -right-2 top-6 group-hover/icon:block"
+        class="absolute z-20 hidden w-64 p-3 text-xs text-white bg-slate-900 border border-slate-700 rounded-lg shadow-xl right-0 top-6 group-hover/icon:block"
       >
         Annual cash flow divided by total cash invested. Shows your annual
         return on investment. Industry standard: 8-12% is good, 12%+ is
