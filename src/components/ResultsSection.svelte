@@ -48,7 +48,7 @@
 <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
   <!-- Cash Invested -->
   <div
-    class="glass-panel p-6 relative overflow-hidden group shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 border-l-4 border-l-blue-500"
+    class="glass-panel p-6 relative overflow-visible group shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 border-l-4 border-l-blue-500"
   >
     <div
       class="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-30 transition-opacity"
@@ -80,7 +80,7 @@
         ></path></svg
       >
       <div
-        class="absolute z-20 hidden w-64 p-3 text-xs text-white bg-slate-900 border border-slate-700 rounded-lg shadow-xl right-0 top-6 group-hover/icon:block"
+        class="absolute z-50 hidden w-64 p-3 text-xs text-white bg-slate-900 border border-slate-700 rounded-lg shadow-xl right-full mr-2 top-6 group-hover/icon:block"
       >
         Total upfront capital required: down payment + closing costs + rehab
         budget. This is your initial investment.
@@ -99,7 +99,7 @@
 
   <!-- Monthly Mortgage P&I -->
   <div
-    class="glass-panel p-6 relative overflow-hidden group shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 border-l-4 border-l-red-500"
+    class="glass-panel p-6 relative overflow-visible group shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 border-l-4 border-l-red-500"
   >
     <div
       class="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-30 transition-opacity"
@@ -131,7 +131,7 @@
         ></path></svg
       >
       <div
-        class="absolute z-20 hidden w-64 p-3 text-xs text-white bg-slate-900 border border-slate-700 rounded-lg shadow-xl right-0 top-6 group-hover/icon:block"
+        class="absolute z-50 hidden w-64 p-3 text-xs text-white bg-slate-900 border border-slate-700 rounded-lg shadow-xl right-full mr-2 top-6 group-hover/icon:block"
       >
         Monthly mortgage payment (principal + interest only). Does not include
         property taxes, insurance, or other expenses.
@@ -150,7 +150,7 @@
 
   <!-- Projected Annual Cash Flow -->
   <div
-    class="glass-panel p-6 relative overflow-hidden group shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 border-l-4 {results.annualCashFlow >=
+    class="glass-panel p-6 relative overflow-visible group shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 border-l-4 {results.annualCashFlow >=
     0
       ? 'border-l-green-500'
       : 'border-l-red-500'}"
@@ -187,7 +187,7 @@
         ></path></svg
       >
       <div
-        class="absolute z-20 hidden w-64 p-3 text-xs text-white bg-slate-900 border border-slate-700 rounded-lg shadow-xl right-0 top-6 group-hover/icon:block"
+        class="absolute z-50 hidden w-64 p-3 text-xs text-white bg-slate-900 border border-slate-700 rounded-lg shadow-xl right-full mr-2 top-6 group-hover/icon:block"
       >
         Annual rental income minus all operating expenses (taxes, insurance,
         maintenance, management, etc.). Positive cash flow means the property
@@ -215,7 +215,7 @@
 
   <!-- Cash-on-Cash Return -->
   <div
-    class="glass-panel p-6 relative overflow-hidden group bg-gradient-to-br from-surface/50 to-primary/10 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 border-l-4 {results.cashOnCash >=
+    class="glass-panel p-6 relative overflow-visible group bg-gradient-to-br from-surface/50 to-primary/10 shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 border-l-4 {results.cashOnCash >=
     0
       ? 'border-l-green-500'
       : 'border-l-red-500'}"
@@ -252,7 +252,7 @@
         ></path></svg
       >
       <div
-        class="absolute z-20 hidden w-64 p-3 text-xs text-white bg-slate-900 border border-slate-700 rounded-lg shadow-xl right-0 top-6 group-hover/icon:block"
+        class="absolute z-50 hidden w-64 p-3 text-xs text-white bg-slate-900 border border-slate-700 rounded-lg shadow-xl right-full mr-2 top-6 group-hover/icon:block"
       >
         Annual cash flow divided by total cash invested. Shows your annual
         return on investment. Industry standard: 8-12% is good, 12%+ is

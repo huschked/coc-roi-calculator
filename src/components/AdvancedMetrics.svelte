@@ -66,7 +66,7 @@
 <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
   <!-- IRR -->
   <div
-    class="glass-panel p-6 relative overflow-hidden group shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 border-l-4 border-l-green-500"
+    class="glass-panel p-6 relative overflow-visible group shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 border-l-4 border-l-green-500"
   >
     <div
       class="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-30 transition-opacity"
@@ -119,7 +119,7 @@
 
   <!-- Equity Multiple -->
   <div
-    class="glass-panel p-6 relative overflow-hidden group shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 border-l-4 border-l-blue-500"
+    class="glass-panel p-6 relative overflow-visible group shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 border-l-4 border-l-blue-500"
   >
     <div
       class="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-30 transition-opacity"
@@ -169,7 +169,7 @@
 
   <!-- NPV @ 8% -->
   <div
-    class="glass-panel p-6 relative overflow-hidden group shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 border-l-4 {advanced.npv >=
+    class="glass-panel p-6 relative overflow-visible group shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 border-l-4 {advanced.npv >=
     0
       ? 'border-l-green-500'
       : 'border-l-red-500'}"
@@ -229,7 +229,7 @@
 
   <!-- Payback Period -->
   <div
-    class="glass-panel p-6 relative overflow-hidden group shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 border-l-4 border-l-purple-500"
+    class="glass-panel p-6 relative overflow-visible group shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 border-l-4 border-l-purple-500"
   >
     <div
       class="absolute top-0 right-0 p-4 opacity-20 group-hover:opacity-30 transition-opacity"
