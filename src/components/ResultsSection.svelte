@@ -66,6 +66,26 @@
         ></path></svg
       >
     </div>
+    <div class="absolute top-3 right-3 group/icon z-20">
+      <svg
+        class="w-5 h-5 text-gray-500 cursor-help"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        ><path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        ></path></svg
+      >
+      <div
+        class="absolute z-20 hidden w-64 p-3 text-xs text-white bg-slate-900 border border-slate-700 rounded-lg shadow-xl -right-2 top-6 group-hover/icon:block"
+      >
+        Total upfront capital required: down payment + closing costs + rehab
+        budget. This is your initial investment.
+      </div>
+    </div>
     <div class="relative z-10">
       <span class="text-sm font-medium text-gray-400 uppercase tracking-wider"
         >Cash Invested</span
@@ -96,6 +116,26 @@
           d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
         ></path></svg
       >
+    </div>
+    <div class="absolute top-3 right-3 group/icon z-20">
+      <svg
+        class="w-5 h-5 text-gray-500 cursor-help"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        ><path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        ></path></svg
+      >
+      <div
+        class="absolute z-20 hidden w-64 p-3 text-xs text-white bg-slate-900 border border-slate-700 rounded-lg shadow-xl -right-2 top-6 group-hover/icon:block"
+      >
+        Monthly mortgage payment (principal + interest only). Does not include
+        property taxes, insurance, or other expenses.
+      </div>
     </div>
     <div class="relative z-10">
       <span class="text-sm font-medium text-gray-400 uppercase tracking-wider"
@@ -132,6 +172,27 @@
           d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
         ></path></svg
       >
+    </div>
+    <div class="absolute top-3 right-3 group/icon z-20">
+      <svg
+        class="w-5 h-5 text-gray-500 cursor-help"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        ><path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        ></path></svg
+      >
+      <div
+        class="absolute z-20 hidden w-64 p-3 text-xs text-white bg-slate-900 border border-slate-700 rounded-lg shadow-xl -right-2 top-6 group-hover/icon:block"
+      >
+        Annual rental income minus all operating expenses (taxes, insurance,
+        maintenance, management, etc.). Positive cash flow means the property
+        pays for itself.
+      </div>
     </div>
     <div class="relative z-10">
       <span
@@ -177,6 +238,27 @@
         ></path></svg
       >
     </div>
+    <div class="absolute top-3 right-3 group/icon z-20">
+      <svg
+        class="w-5 h-5 text-gray-500 cursor-help"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+        ><path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        ></path></svg
+      >
+      <div
+        class="absolute z-20 hidden w-64 p-3 text-xs text-white bg-slate-900 border border-slate-700 rounded-lg shadow-xl -right-2 top-6 group-hover/icon:block"
+      >
+        Annual cash flow divided by total cash invested. Shows your annual
+        return on investment. Industry standard: 8-12% is good, 12%+ is
+        excellent.
+      </div>
+    </div>
     <div class="relative z-10">
       <span
         class="text-sm font-medium text-primary-glow uppercase tracking-wider flex items-center gap-2"
@@ -191,7 +273,7 @@
           ? `${(results.cashOnCash * 100).toFixed(2)}%`
           : `-${(Math.abs(results.cashOnCash) * 100).toFixed(2)}%`}
       </div>
-      <div class="text-xs text-primary/60 mt-1">Annual ROI</div>
+      <div class="text-xs text-primary/60 mt-1">Annual ROI · Target: 8-12%</div>
     </div>
   </div>
 
