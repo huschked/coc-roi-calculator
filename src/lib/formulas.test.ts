@@ -1,5 +1,4 @@
-
-import { compute, computeAdvanced, computeRefi } from './formulas';
+import { compute, computeAdvanced } from "./formulas";
 
 const inputs = {
     purchasePrice: 300000,
@@ -10,9 +9,16 @@ const inputs = {
     amortYears: 30,
     monthlyRent: 2000,
     vacancyRate: 0.05,
+    useDetailedExpenses: false,
     monthlyOpEx: 500,
+    propertyTaxes: 0,
+    insurance: 0,
+    repairs: 0,
+    propertyMgmtPercent: 0.1,
+    capexReserves: 0,
+    hoaFees: 0,
     rentGrowthRate: 0.02,
-    appreciationRate: 0.03, // 3%
+    appreciationRate: 0.03,
     marketTrendAdjustment: 0.0,
     locationScore: 5,
 };
@@ -27,14 +33,8 @@ console.log("IRR:", advanced.irr);
 console.log("Equity Multiple:", advanced.equityMultiple);
 console.log("NPV:", advanced.npv);
 
-// Verification
 const netAppRate = inputs.appreciationRate + inputs.marketTrendAdjustment;
 const expectedSalePrice = inputs.purchasePrice * Math.pow(1 + netAppRate, 30);
-
-// We can't access salePrice directly from advanced, but we can check if the results look reasonable (much higher than before).
-// Before fix: Sale Price ~ 302k
-// After fix: Sale Price ~ 728k
-// This will massively affect Equity Multiple and IRR.
 
 console.log("Expected Sale Price:", expectedSalePrice);
 

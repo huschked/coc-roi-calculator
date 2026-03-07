@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount } from "svelte";
+  import { onMount, onDestroy } from "svelte";
   import InputSection from "./components/InputSection.svelte";
   import RefiSection from "./components/RefiSection.svelte";
   import ResultsSection from "./components/ResultsSection.svelte";
@@ -16,8 +16,7 @@
   } from "./lib/formulas";
   import { readState, writeState } from "./lib/urlSync";
 
-  // State
-  let form: Inputs = {
+  const defaultForm: Inputs = {
     purchasePrice: 300000,
     downPercent: 0.05,
     closingCosts: 8000,
@@ -26,40 +25,129 @@
     amortYears: 30,
     monthlyRent: 2000,
     vacancyRate: 0.05,
+    useDetailedExpenses: false,
     monthlyOpEx: 500,
+    propertyTaxes: 0,
+    insurance: 0,
+    repairs: 0,
+    propertyMgmtPercent: 0.1,
+    capexReserves: 0,
+    hoaFees: 0,
     rentGrowthRate: 0.02,
+    appreciationRate: 0.03,
+    marketTrendAdjustment: 0,
+    locationScore: 5,
   };
-  let refi: RefiInputs = {
+
+  const defaultRefi: RefiInputs = {
     enabled: false,
     newLoanAmount: 250000,
     newRate: 0.055,
     newTermYears: 30,
     closingCosts: 5000,
   };
+
+  type QueryState = Record<string, unknown>;
+
+  const toNumber = (v: unknown, fallback: number) => {
+    const parsed = typeof v === "number" ? v : Number(v);
+    return Number.isFinite(parsed) ? parsed : fallback;
+  };
+
+  const toBool = (v: unknown, fallback: boolean) => {
+    if (typeof v === "boolean") return v;
+    if (typeof v === "number") return v !== 0;
+    if (typeof v !== "string") return fallback;
+    const normalized = v.trim().toLowerCase();
+    if (["1", "true", "yes", "on"].includes(normalized)) return true;
+    if (["0", "false", "no", "off"].includes(normalized)) return false;
+    return fallback;
+  };
+
+  const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n));
+
+  function parseFormFromQuery(q: QueryState): Inputs {
+    return {
+      purchasePrice: toNumber(q.purchasePrice, defaultForm.purchasePrice),
+      downPercent: clamp(toNumber(q.downPercent, defaultForm.downPercent), 0, 1),
+      closingCosts: toNumber(q.closingCosts, defaultForm.closingCosts),
+      rehabCosts: toNumber(q.rehabCosts, defaultForm.rehabCosts),
+      interestRate: clamp(toNumber(q.interestRate, defaultForm.interestRate), 0, 1),
+      amortYears: Math.max(1, Math.round(toNumber(q.amortYears, defaultForm.amortYears))),
+      monthlyRent: toNumber(q.monthlyRent, defaultForm.monthlyRent),
+      vacancyRate: clamp(toNumber(q.vacancyRate, defaultForm.vacancyRate), 0, 1),
+      useDetailedExpenses: toBool(q.useDetailedExpenses, defaultForm.useDetailedExpenses),
+      monthlyOpEx: toNumber(q.monthlyOpEx, defaultForm.monthlyOpEx),
+      propertyTaxes: toNumber(q.propertyTaxes, defaultForm.propertyTaxes),
+      insurance: toNumber(q.insurance, defaultForm.insurance),
+      repairs: toNumber(q.repairs, defaultForm.repairs),
+      propertyMgmtPercent: clamp(toNumber(q.propertyMgmtPercent, defaultForm.propertyMgmtPercent), 0, 1),
+      capexReserves: toNumber(q.capexReserves, defaultForm.capexReserves),
+      hoaFees: toNumber(q.hoaFees, defaultForm.hoaFees),
+      rentGrowthRate: toNumber(q.rentGrowthRate, defaultForm.rentGrowthRate),
+      appreciationRate: toNumber(q.appreciationRate, defaultForm.appreciationRate),
+      marketTrendAdjustment: toNumber(q.marketTrendAdjustment, defaultForm.marketTrendAdjustment),
+      locationScore: clamp(Math.round(toNumber(q.locationScore, defaultForm.locationScore)), 1, 10),
+    };
+  }
+
+  function parseRefiFromQuery(q: QueryState): RefiInputs {
+    return {
+      enabled: toBool(q.refiEnabled ?? q.enabled, defaultRefi.enabled),
+      newLoanAmount: toNumber(q.newLoanAmount, defaultRefi.newLoanAmount),
+      newRate: clamp(toNumber(q.newRate, defaultRefi.newRate), 0, 1),
+      newTermYears: Math.max(1, Math.round(toNumber(q.newTermYears, defaultRefi.newTermYears))),
+      closingCosts: toNumber(q.refiClosingCosts ?? q.closingCosts, defaultRefi.closingCosts),
+    };
+  }
+
+  // State
+  let form: Inputs = { ...defaultForm };
+  let refi: RefiInputs = { ...defaultRefi };
   let savedScenarios: { name: string; inputs: Inputs }[] = [];
   let copied = false;
 
   onMount(() => {
-    Object.assign(form, readState<Inputs>());
-    Object.assign(refi, readState<RefiInputs>());
+    const queryState = readState<QueryState>();
+    form = { ...defaultForm, ...parseFormFromQuery(queryState) };
+    refi = { ...defaultRefi, ...parseRefiFromQuery(queryState) };
+
     const stored = localStorage.getItem("savedScenarios");
-    if (stored) savedScenarios = JSON.parse(stored);
+    if (!stored) return;
+
+    try {
+      const parsed = JSON.parse(stored) as Array<{ name?: unknown; inputs?: Partial<Inputs> }>;
+      savedScenarios = parsed
+        .filter((s) => typeof s?.name === "string" && typeof s?.inputs === "object" && s.inputs !== null)
+        .map((s) => ({
+          name: s.name as string,
+          inputs: { ...defaultForm, ...(s.inputs as Partial<Inputs>) },
+        }));
+    } catch {
+      localStorage.removeItem("savedScenarios");
+      savedScenarios = [];
+    }
   });
+
+  onDestroy(() => clearTimeout(urlTimer));
 
   function saveScenario() {
     const name = prompt("Name this scenario:");
     if (!name) return;
-    savedScenarios = [...savedScenarios, { name, inputs: { ...form } }];
+    savedScenarios = [...savedScenarios, { name, inputs: { ...defaultForm, ...form } }];
     localStorage.setItem("savedScenarios", JSON.stringify(savedScenarios));
   }
+
   function loadScenario(i: number) {
-    form = { ...savedScenarios[i].inputs };
+    form = { ...defaultForm, ...savedScenarios[i].inputs };
   }
+
   function deleteScenario(i: number) {
     savedScenarios.splice(i, 1);
-    savedScenarios = savedScenarios; // reassign for Svelte
+    savedScenarios = savedScenarios;
     localStorage.setItem("savedScenarios", JSON.stringify(savedScenarios));
   }
+
   function copyLink() {
     navigator.clipboard.writeText(location.href);
     copied = true;
@@ -72,45 +160,36 @@
   $: advanced = computeAdvanced(form, form.amortYears);
 
   // Sync URL
-  let urlTimer: ReturnType<typeof setTimeout>;
+  let urlTimer: ReturnType<typeof setTimeout> | undefined;
   $: {
-    const {
-      purchasePrice,
-      downPercent,
-      closingCosts,
-      rehabCosts,
-      interestRate,
-      amortYears,
-      monthlyRent,
-      vacancyRate,
-      monthlyOpEx,
-      rentGrowthRate,
-    } = form;
-    const {
-      enabled,
-      newLoanAmount,
-      newRate,
-      newTermYears,
-      closingCosts: rc,
-    } = refi;
     clearTimeout(urlTimer);
     urlTimer = setTimeout(() => {
       writeState({
-        purchasePrice,
-        downPercent,
-        closingCosts,
-        rehabCosts,
-        interestRate,
-        amortYears,
-        monthlyRent,
-        vacancyRate,
-        monthlyOpEx,
-        rentGrowthRate,
-        refiEnabled: enabled,
-        newLoanAmount,
-        newRate,
-        newTermYears,
-        refiClosingCosts: rc,
+        purchasePrice: form.purchasePrice,
+        downPercent: form.downPercent,
+        closingCosts: form.closingCosts,
+        rehabCosts: form.rehabCosts,
+        interestRate: form.interestRate,
+        amortYears: form.amortYears,
+        monthlyRent: form.monthlyRent,
+        vacancyRate: form.vacancyRate,
+        useDetailedExpenses: form.useDetailedExpenses,
+        monthlyOpEx: form.monthlyOpEx,
+        propertyTaxes: form.propertyTaxes,
+        insurance: form.insurance,
+        repairs: form.repairs,
+        propertyMgmtPercent: form.propertyMgmtPercent,
+        capexReserves: form.capexReserves,
+        hoaFees: form.hoaFees,
+        rentGrowthRate: form.rentGrowthRate,
+        appreciationRate: form.appreciationRate,
+        marketTrendAdjustment: form.marketTrendAdjustment,
+        locationScore: form.locationScore,
+        refiEnabled: refi.enabled,
+        newLoanAmount: refi.newLoanAmount,
+        newRate: refi.newRate,
+        newTermYears: refi.newTermYears,
+        refiClosingCosts: refi.closingCosts,
       });
     }, 400);
   }
@@ -178,7 +257,7 @@
                         class="text-xs text-red-400 hover:text-red-300 font-medium"
                         title="Delete scenario"
                       >
-                        ×
+                        &times;
                       </button>
                     </div>
                   </li>
@@ -352,7 +431,7 @@
       Financial Projection
     </h2>
     <ChartSection bind:form initialYears={form.amortYears} />
-    {#if refi.enabled && isFinite(refiResults.breakEvenMonths)}
+    {#if refi.enabled && isFinite(refiResults?.breakEvenMonths ?? Infinity)}
       <div class="mt-8">
         <BreakEvenChart monthlyPmt={results.monthlyPmt} {refi} />
       </div>
@@ -367,21 +446,16 @@
 </main>
 
 <footer class="text-center text-sm py-6 border-t mt-10">
-  © 2025 RentROICalc. All rights reserved.
+  (c) 2025 RentROICalc. All rights reserved.
 </footer>
 
 <style lang="postcss">
-  /* uniform card height */
   :global(.stat-card) {
     @apply min-h-[8rem];
   }
-  .btn-primary {
-    /* your primary button styles */
-  }
-  .btn-secondary {
-    @apply bg-gray-200 text-gray-800 px-4 py-2 rounded hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200;
-  }
+
   .btn-primary-lg {
-    /* your large primary button styles */
+    @apply bg-gradient-to-r from-primary to-blue-600 text-white font-semibold px-6 py-3 rounded-lg shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all active:translate-y-0;
   }
 </style>
+

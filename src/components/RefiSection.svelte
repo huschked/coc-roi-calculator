@@ -2,8 +2,20 @@
     import type { RefiInputs } from "../lib/formulas";
     export let refi: RefiInputs;
 
-    let newRatePct = (refi.newRate * 100).toFixed(3);
-    const syncRate = () => (refi.newRate = +newRatePct / 100);
+    let newRatePct = "";
+
+    const syncRate = () => {
+        const parsed = parseFloat(newRatePct);
+        refi.newRate = Number.isFinite(parsed) ? parsed / 100 : 0;
+    };
+
+    $: {
+        const fromModel = (Number(refi.newRate) || 0) * 100;
+        const asNumber = parseFloat(newRatePct);
+        if (!Number.isFinite(asNumber) || Math.abs(asNumber - fromModel) > 0.0005) {
+            newRatePct = fromModel.toFixed(3);
+        }
+    }
 </script>
 
 <!-- Collapsible section -->
@@ -86,7 +98,7 @@
                     max="100"
                     step="0.001"
                     bind:value={newRatePct}
-                    on:blur={syncRate}
+                    on:input={syncRate}
                 />
             </label>
 

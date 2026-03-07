@@ -1,20 +1,24 @@
 // src/lib/urlSync.ts
-import qs from 'qs';
+import qs from "qs";
 
-export function readState<T = any>(): Partial<T> {
-  // parse the query‑string into a plain object
-  const parsed = qs.parse(location.search, { ignoreQueryPrefix: true }) as Record<string, any>;
-
-  // (optional) decompress % fields here …
+export function readState<T = Record<string, unknown>>(): Partial<T> {
+  const parsed = qs.parse(location.search, {
+    ignoreQueryPrefix: true,
+    parseArrays: false,
+  }) as Record<string, unknown>;
 
   return parsed as Partial<T>;
 }
 
-export function writeState(obj: any) {
-  const query = qs.stringify(obj, {
+export function writeState(obj: Record<string, unknown>) {
+  const compact = Object.fromEntries(
+    Object.entries(obj).filter(([, value]) => value !== undefined && value !== null),
+  );
+
+  const query = qs.stringify(compact, {
     addQueryPrefix: true,
-    encoder: (str: string) => (str === undefined ? '' : str), // skip undefined
-    format: 'RFC1738',
+    format: "RFC1738",
   });
-  history.replaceState(null, '', query);
+
+  history.replaceState(null, "", query);
 }

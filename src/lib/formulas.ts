@@ -64,6 +64,10 @@ export function calculateMonthlyPayment(
  * Uses either simple mode (single monthlyOpEx) or detailed mode (itemized expenses)
  */
 export function calculateMonthlyOpEx(inputs: Inputs): number {
+  return calculateMonthlyOpExForRent(inputs, Number(inputs.monthlyRent) || 0);
+}
+
+export function calculateMonthlyOpExForRent(inputs: Inputs, monthlyRent: number): number {
   if (!inputs.useDetailedExpenses) {
     return Number(inputs.monthlyOpEx) || 0;
   }
@@ -76,9 +80,8 @@ export function calculateMonthlyOpEx(inputs: Inputs): number {
   const hoaFees = Number(inputs.hoaFees) || 0;
 
   // Property management is a percentage of rent
-  const monthlyRent = Number(inputs.monthlyRent) || 0;
   const propertyMgmtPercent = Number(inputs.propertyMgmtPercent) || 0;
-  const propertyMgmt = monthlyRent * propertyMgmtPercent;
+  const propertyMgmt = Math.max(0, monthlyRent) * propertyMgmtPercent;
 
   return propertyTaxes + insurance + repairs + capexReserves + hoaFees + propertyMgmt;
 }
@@ -177,14 +180,17 @@ export function amortizationSchedule(
     if (monthsPassed < totalMonths && monthlyRate > 0) {
       balance = loanAmount * Math.pow(1 + monthlyRate, monthsPassed) -
         monthlyPmt * (Math.pow(1 + monthlyRate, monthsPassed) - 1) / monthlyRate;
+    } else if (monthsPassed < totalMonths && monthlyRate === 0) {
+      balance = loanAmount * (1 - monthsPassed / totalMonths);
     }
     balance = Math.max(0, balance); // Ensure non-negative
 
     // Calculate annual cash flow for this year using helper
-    const monthlyOpEx = calculateMonthlyOpEx(inputs);
+    const monthlyOpEx = calculateMonthlyOpExForRent(inputs, currentRent);
     const effectiveRent = currentRent * (1 - vacancyRate);
     const monthlyNOI = effectiveRent - monthlyOpEx;
-    const monthlyCF = monthlyNOI - monthlyPmt;
+    const activeMonthlyPmt = monthsPassed < totalMonths ? monthlyPmt : 0;
+    const monthlyCF = monthlyNOI - activeMonthlyPmt;
     const annualCF = monthlyCF * 12;
 
     schedule.push({ year, balance, cashFlow: annualCF });
@@ -246,14 +252,13 @@ export function computeAdvanced(
   paybackYears: number;
 } {
   // Get core metrics
-  const { cashInvested, annualCashFlow } = compute(inputs);
+  const { cashInvested } = compute(inputs);
   const schedule = amortizationSchedule(inputs, years);
 
   // Ensure all inputs are numbers
   const purchasePrice = Number(inputs.purchasePrice) || 0;
   const appreciationRate = Number(inputs.appreciationRate) || 0;
   const marketTrendAdjustment = Number(inputs.marketTrendAdjustment) || 0;
-  const rentGrowthRate = Number(inputs.rentGrowthRate) || 0;
 
   // Calculate sale price at end of holding period
   const netAppreciationRate = appreciationRate + marketTrendAdjustment;
@@ -267,9 +272,7 @@ export function computeAdvanced(
   const cashFlows: number[] = [-cashInvested];
 
   for (let year = 1; year <= years; year++) {
-    const yearlyGrowth = Math.pow(1 + rentGrowthRate, year - 1);
-    const cf = annualCashFlow * yearlyGrowth;
-    cashFlows.push(cf);
+    cashFlows.push(schedule[year]?.cashFlow || 0);
   }
 
   // Add sale proceeds to final year
@@ -310,3 +313,4 @@ export function computeAdvanced(
     paybackYears,
   };
 }
+
